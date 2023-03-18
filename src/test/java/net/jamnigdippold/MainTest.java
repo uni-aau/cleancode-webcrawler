@@ -1,4 +1,4 @@
-package net.jamnig;
+package net.jamnigdippold;
 
 public class MainTest {
 
