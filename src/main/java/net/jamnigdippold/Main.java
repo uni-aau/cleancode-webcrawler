@@ -1,13 +1,16 @@
 package net.jamnigdippold;
-import org.jsoup.*;
-import org.jsoup.nodes.Document;
 
-import java.io.IOException;
+import java.util.Scanner;
 
 public class Main {
+    String websiteUrl;
+    int depthOfRecursiveSearch;
+    String languageCode;
 
     public static void main(String[] args) {
-        System.out.println("Test");
+        WebsiteCrawler crawler = new WebsiteCrawler();
+        crawler.startCrawling();
+}
 
-    }
+
 }
