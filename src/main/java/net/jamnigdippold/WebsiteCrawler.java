@@ -10,7 +10,8 @@ public class WebsiteCrawler {
 
     public void startCrawling() {
         getConsoleInput();
-        crawlWebsite();
+        crawlHeadlines(websiteUrl);
+        crawlWebsiteLinks(websiteUrl);
     }
 
     private void getConsoleInput() {
@@ -25,7 +26,27 @@ public class WebsiteCrawler {
         languageCode = inputScanner.next();
     }
 
-    private void crawlWebsite() {
+    private void crawlHeadlines(String websiteUrl) {
+        Elements headlineSelection;
+        Document websiteDocumentConnection;
+        try {
+            websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
+            headlineSelection = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        printCrawledHeadlines(headlineSelection);
+    }
 
+    private void crawlWebsiteLinks(String websiteUrl) {
+        Elements linksSelection;
+        Document websiteDocumentConnection;
+        try {
+            websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
+            linksSelection = websiteDocumentConnection.select("a[href]");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        printCrawledLinks(linksSelection);
     }
 }
