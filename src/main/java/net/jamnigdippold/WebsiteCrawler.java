@@ -1,5 +1,11 @@
 package net.jamnigdippold;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
 import java.util.Scanner;
 
 // Todo muss noch umgeschrieben werden - Nur testweise
@@ -49,4 +55,18 @@ public class WebsiteCrawler {
         }
         printCrawledLinks(linksSelection);
     }
+
+    private void printCrawledHeadlines(Elements crawledHeadlineElements) {
+        for(Element crawledHeadlineElement : crawledHeadlineElements) {
+            System.out.println(crawledHeadlineElement);
+        }
+
+    }
+
+    private void printCrawledLinks(Elements crawledLinkElements) {
+        for(Element crawledLinkElement: crawledLinkElements) {
+            System.out.println(crawledLinkElement.attr("href"));
+        }
+    }
+
 }
