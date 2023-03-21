@@ -14,10 +14,11 @@ public class WebsiteCrawler {
     private int depthOfRecursiveSearch;
     private String languageCode;
 
+    // Konsoleninput könnte man sonst auch via Main Klasse realisieren und dann der Klasse über den Konstruktor die Werte übergeben
     public void startCrawling() {
         getConsoleInput();
-        crawlHeadlines(websiteUrl);
-        crawlWebsiteLinks(websiteUrl);
+        crawlHeadlines();
+        crawlWebsiteLinks();
     }
 
     private void getConsoleInput() {
@@ -32,7 +33,7 @@ public class WebsiteCrawler {
         languageCode = inputScanner.next();
     }
 
-    private void crawlHeadlines(String websiteUrl) {
+    private void crawlHeadlines() {
         Elements headlineSelection;
         Document websiteDocumentConnection;
         try {
@@ -44,7 +45,7 @@ public class WebsiteCrawler {
         printCrawledHeadlines(headlineSelection);
     }
 
-    private void crawlWebsiteLinks(String websiteUrl) {
+    private void crawlWebsiteLinks() {
         Elements linksSelection;
         Document websiteDocumentConnection;
         try {
