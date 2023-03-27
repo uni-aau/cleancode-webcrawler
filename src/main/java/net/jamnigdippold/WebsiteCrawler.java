@@ -6,68 +6,143 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
-// Todo muss noch umgeschrieben werden - Nur testweise
 public class WebsiteCrawler {
-    private String websiteUrl;
-    private int depthOfRecursiveSearch;
-    private String languageCode;
+    private final String websiteUrl;
+    private final int maxDepthOfRecursiveSearch;
+    private final int currentDepthOfRecursiveSearch;
+    private final String languageCode;
 
-    // Konsoleninput könnte man sonst auch via Main Klasse realisieren und dann der Klasse über den Konstruktor die Werte übergeben
-    public void startCrawling() {
-        getConsoleInput();
-        crawlHeadlines();
-        crawlWebsiteLinks();
+    private Document websiteDocumentConnection;
+    private Elements crawledHeadlineElements;
+    private List<String> crawledLinks;
+
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String languageCode) {
+        this(websiteUrl, maxDepthOfRecursiveSearch, languageCode, 0);
     }
 
-    private void getConsoleInput() {
-        System.out.println("Enter the website url that should be crawled");
-        Scanner inputScanner = new Scanner(System.in);
-        websiteUrl = inputScanner.next();
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String languageCode, int currentDepthOfRecursiveSearch) {
+        this.websiteUrl = websiteUrl;
+        this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
+        this.languageCode = languageCode;
+        this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
+    }
 
-        System.out.println("Enter the depth of search");
-        depthOfRecursiveSearch = inputScanner.nextInt();
+    public void startCrawling() {
+        printInput();
+        establishConnection();
+        crawlHeadlines();
+        printCrawledHeadlines();
+        crawlWebsiteLinks();
+        recursivelyCrawlLinkedWebsites();
+    }
 
-        System.out.println("Enter your language code [zB de_DE]");
-        languageCode = inputScanner.next();
+    private void printInput() {
+        if (currentDepthOfRecursiveSearch == 0) {
+            System.out.println("input: <a>" + websiteUrl + "</a>");
+            System.out.println("<br>depth: " + maxDepthOfRecursiveSearch);
+            System.out.println("<br>source language: " + "TODO");
+            System.out.println("<br>target language: " + languageCode);
+            System.out.println("<br>summary:");
+        }
+    }
+
+    private void establishConnection() {
+        try {
+            websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
     }
 
     private void crawlHeadlines() {
-        Elements headlineSelection;
-        Document websiteDocumentConnection;
-        try {
-            websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
-            headlineSelection = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        printCrawledHeadlines(headlineSelection);
+        crawledHeadlineElements = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
     }
 
     private void crawlWebsiteLinks() {
-        Elements linksSelection;
-        Document websiteDocumentConnection;
+        Elements crawledLinkElements = websiteDocumentConnection.select("a[href]");
+        crawledLinks = new ArrayList<>();
+        for (Element crawledLinkElement : crawledLinkElements) {
+            crawledLinks.add(crawledLinkElement.attr("href"));
+        }
+    }
+
+    private void recursivelyCrawlLinkedWebsites() { //TODO: function both starts new crawlers and prints links, but the printing should happen here to uphold desired output format (Link, Output of Link, Link, Output of Link ...)
+        for (String crawledLink : crawledLinks) {
+            crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
+            if (!isBrokenLink(crawledLink)) {
+                printCrawledLink(crawledLink);
+                startNewCrawler(crawledLink);
+            } else {
+                printBrokenLink(crawledLink);
+            }
+        }
+    }
+
+    private String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
+        String absoluteUrl = relativeUrl;
+        if (!relativeUrl.startsWith("http"))
+            absoluteUrl = websiteUrl + relativeUrl.substring(2);
+        return absoluteUrl;
+    }
+
+    private boolean isBrokenLink(String crawledLink) {
         try {
-            websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
-            linksSelection = websiteDocumentConnection.select("a[href]");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        printCrawledLinks(linksSelection);
-    }
-
-    private void printCrawledHeadlines(Elements crawledHeadlineElements) {
-        for(Element crawledHeadlineElement : crawledHeadlineElements) {
-            System.out.println(crawledHeadlineElement);
-        }
-
-    }
-
-    private void printCrawledLinks(Elements crawledLinkElements) {
-        for(Element crawledLinkElement: crawledLinkElements) {
-            System.out.println(crawledLinkElement.attr("href"));
+            Jsoup.connect(crawledLink).get();
+            return false;
+        } catch (IOException exception) {
+            return true;
         }
     }
 
+    private void startNewCrawler(String crawledLink) {
+        if (currentDepthOfRecursiveSearch <= maxDepthOfRecursiveSearch) {
+            WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, languageCode, currentDepthOfRecursiveSearch + 1);
+            recursiveCrawler.startCrawling();
+        }
+    }
+
+    private void printCrawledHeadlines() {
+        for (Element crawledHeadlineElement : crawledHeadlineElements) {
+            printHeaderLevel(crawledHeadlineElement);
+            if (currentDepthOfRecursiveSearch > 0) {
+                printDepthIndicator();
+            }
+            System.out.println(crawledHeadlineElement.text());
+        }
+        System.out.println();
+    }
+
+    private void printHeaderLevel(Element crawledHeadlineElement) {
+        int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0';
+        for (int i = 0; i < numOfHeader; i++) {
+            System.out.print("#");
+        }
+        System.out.print(" ");
+    }
+
+    private void printCrawledLink(String crawledLink) { //TODO: decide whether "avoid duplication" or "flags are ugly"/"have few arguments" is more important
+        System.out.print("<br>--");
+        printDepthIndicator();
+        System.out.print("link to <a>");
+        System.out.print(crawledLink);
+        System.out.println("</a>\n");
+    }
+
+    private void printBrokenLink(String crawledLink) {
+        System.out.print("<br>--");
+        printDepthIndicator();
+        System.out.print("broken link <a>");
+        System.out.print(crawledLink);
+        System.out.println("</a>\n");
+    }
+
+    private void printDepthIndicator() {
+        for (int i = 0; i < currentDepthOfRecursiveSearch; i++) {
+            System.out.print("--");
+        }
+        System.out.print("> ");
+    }
 }
