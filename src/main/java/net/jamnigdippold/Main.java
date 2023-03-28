@@ -21,7 +21,7 @@ public class Main {
         System.out.println("Enter the depth of search");
         depthOfRecursiveSearch = inputScanner.nextInt();
 
-        System.out.println("Enter your language code [zB de_DE]");
+        System.out.println("Enter your language code [zB de]");
         languageCode = inputScanner.next();
     }
 }

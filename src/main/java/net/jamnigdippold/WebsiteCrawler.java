@@ -1,5 +1,9 @@
 package net.jamnigdippold;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,20 +17,20 @@ public class WebsiteCrawler {
     private final String websiteUrl;
     private final int maxDepthOfRecursiveSearch;
     private final int currentDepthOfRecursiveSearch;
-    private final String languageCode;
-
     private Document websiteDocumentConnection;
     private Elements crawledHeadlineElements;
     private List<String> crawledLinks;
+    private final String sourceLanguage = "en"; // Todo Checker für Headersprache
+    private final String targetLanguage;
 
-    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String languageCode) {
-        this(websiteUrl, maxDepthOfRecursiveSearch, languageCode, 0);
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage) {
+        this(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0);
     }
 
-    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String languageCode, int currentDepthOfRecursiveSearch) {
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch) {
         this.websiteUrl = websiteUrl;
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
-        this.languageCode = languageCode;
+        this.targetLanguage = targetLanguage;
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
     }
 
@@ -43,8 +47,8 @@ public class WebsiteCrawler {
         if (currentDepthOfRecursiveSearch == 0) {
             System.out.println("input: <a>" + websiteUrl + "</a>");
             System.out.println("<br>depth: " + maxDepthOfRecursiveSearch);
-            System.out.println("<br>source language: " + "TODO");
-            System.out.println("<br>target language: " + languageCode);
+            System.out.println("<br>source language: " + sourceLanguage);
+            System.out.println("<br>Target language: " + targetLanguage);
             System.out.println("<br>summary:");
         }
     }
@@ -99,7 +103,7 @@ public class WebsiteCrawler {
 
     private void startNewCrawler(String crawledLink) {
         if (currentDepthOfRecursiveSearch <= maxDepthOfRecursiveSearch) {
-            WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, languageCode, currentDepthOfRecursiveSearch + 1);
+            WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1);
             recursiveCrawler.startCrawling();
         }
     }
@@ -110,7 +114,7 @@ public class WebsiteCrawler {
             if (currentDepthOfRecursiveSearch > 0) {
                 printDepthIndicator();
             }
-            System.out.println(crawledHeadlineElement.text());
+            System.out.println(getTranslatedHeadline(crawledHeadlineElement.text()));
         }
         System.out.println();
     }
@@ -144,5 +148,55 @@ public class WebsiteCrawler {
             System.out.print("--");
         }
         System.out.print("> ");
+    }
+
+    private RequestBody createNewRequestBody(String headerText) {
+        return new FormBody.Builder()
+                .add("source_language", sourceLanguage)
+                .add("target_language", targetLanguage)
+                .add("text", headerText)
+                .build();
+    }
+
+    private Request createTranslationApiRequest(RequestBody body) {
+        return new Request.Builder()
+                .url("https://text-translator2.p.rapidapi.com/translate")
+                .post(body)
+                .addHeader("content-type", "application/x-www-form-urlencoded")
+                .addHeader("X-RapidAPI-Key", "fe74ad9331msh075615faa2bbedap19fc94jsn8e377fd515bc")
+                .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
+                .build();
+    }
+
+    private String convertApiResponseToString(Request translationApiRequest) { // Todo 2 verschiedene Sachen in einer Methode
+        OkHttpClient client = new OkHttpClient(); // Todo auslagern und umbennen?
+        Response apiRequestTranslation;
+        String apiRequestTranslationString;
+        try {
+            apiRequestTranslation = client.newCall(translationApiRequest).execute();
+            apiRequestTranslationString = apiRequestTranslation.body().string();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return apiRequestTranslationString;
+    }
+
+    private String parseJsonData(String apiRequestTranslationString) {
+        ObjectMapper objectMapper = new ObjectMapper(); // Todo auslagern und umbennen?
+        JsonNode jsonNode;
+        try {
+            jsonNode = objectMapper.readTree(apiRequestTranslationString);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return jsonNode.get("data").get("translatedText").asText();
+    }
+
+    // Todo Die Methode muss noch angepasst werden
+    private String getTranslatedHeadline(String crawledHeadlineText) {
+        RequestBody body = createNewRequestBody(crawledHeadlineText);
+        Request request = createTranslationApiRequest(body);
+        String translationString = convertApiResponseToString(request);
+        return parseJsonData(translationString);
     }
 }
