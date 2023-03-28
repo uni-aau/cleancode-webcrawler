@@ -84,7 +84,7 @@ public class WebsiteCrawler {
     private String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
         String absoluteUrl = relativeUrl;
         if (!relativeUrl.startsWith("http"))
-            absoluteUrl = websiteUrl + relativeUrl.substring(2);
+            absoluteUrl = websiteUrl + relativeUrl.substring(1);
         return absoluteUrl;
     }
 
