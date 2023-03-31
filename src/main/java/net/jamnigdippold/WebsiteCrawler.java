@@ -11,6 +11,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,12 +97,16 @@ public class WebsiteCrawler {
 
     private boolean isBrokenLink(String crawledLink) {
         try {
-            URL link = new URL(crawledLink);
-            int response = connectToURL(link);
-            return response != HttpURLConnection.HTTP_OK;
+            return checkForBrokenLink(crawledLink);
         } catch (IOException exception) {
             return true;
         }
+    }
+
+    private boolean checkForBrokenLink(String crawledLink) throws IOException {
+        URL link = new URL(crawledLink);
+        int response = connectToURL(link);
+        return response != HttpURLConnection.HTTP_OK;
     }
 
     private int connectToURL(URL link) throws IOException {
@@ -187,14 +192,20 @@ public class WebsiteCrawler {
     }
 
     private String extractTranslatedText(Response apiResponse) {
-        String apiResponseBody;
-        JsonNode node;
         try {
-            apiResponseBody = apiResponse.body().string();
-            node = new ObjectMapper().readTree(apiResponseBody);
+            return extractTranslation(apiResponse);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String extractTranslation(Response apiResponse) throws IOException {
+        String apiResponseBody;
+        JsonNode node;
+
+        apiResponseBody = apiResponse.body().string();
+        node = new ObjectMapper().readTree(apiResponseBody);
+
         return node.get("data").get("translatedText").asText();
     }
 
