@@ -11,6 +11,7 @@ public class Main {
         getConsoleInput();
         WebsiteCrawler crawler = new WebsiteCrawler(websiteUrl, depthOfRecursiveSearch,languageCode);
         crawler.startCrawling();
+        System.exit(0);
     }
 
     private static void getConsoleInput() {
@@ -23,5 +24,7 @@ public class Main {
 
         System.out.println("Enter your language code [zB de]");
         languageCode = inputScanner.next();
+
+        inputScanner.close();
     }
 }
