@@ -168,35 +168,32 @@ public class WebsiteCrawler {
                 .build();
     }
 
-    private String convertApiResponseToString(Request translationApiRequest) { // Todo 2 verschiedene Sachen in einer Methode
-        OkHttpClient client = new OkHttpClient(); // Todo auslagern und umbennen?
-        Response apiRequestTranslation;
-        String apiRequestTranslatedString;
+    private Response executeTranslationApiRequest(Request translationApiRequest) {
+        OkHttpClient client = new OkHttpClient();
         try {
-            apiRequestTranslation = client.newCall(translationApiRequest).execute();
-            apiRequestTranslatedString = apiRequestTranslation.body().string();
+            return client.newCall(translationApiRequest).execute();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return apiRequestTranslatedString;
     }
 
-    private String parseJsonData(String apiRequestTranslationString) {
-        ObjectMapper mapper = new ObjectMapper(); // Todo auslagern
+    private String extractTranslatedText(Response apiResponse) {
+        String apiResponseBody;
         JsonNode node;
         try {
-            node = mapper.readTree(apiRequestTranslationString);
-        } catch (JsonProcessingException e) {
+            apiResponseBody = apiResponse.body().string();
+            node = new ObjectMapper().readTree(apiResponseBody);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return node.get("data").get("translatedText").asText();
     }
 
-    // Todo Die Methode muss noch angepasst werden
     private String getTranslatedHeadline(String crawledHeadlineText) {
         RequestBody body = createNewRequestBody(crawledHeadlineText);
         Request request = createTranslationApiRequest(body);
-        String translatedString = convertApiResponseToString(request);
-        return parseJsonData(translatedString);
+        Response apiResponse = executeTranslationApiRequest(request);
+        String translatedString = extractTranslatedText(apiResponse);
+        return translatedString;
     }
 }
