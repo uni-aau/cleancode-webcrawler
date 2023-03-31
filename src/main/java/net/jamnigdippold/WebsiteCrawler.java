@@ -171,32 +171,32 @@ public class WebsiteCrawler {
     private String convertApiResponseToString(Request translationApiRequest) { // Todo 2 verschiedene Sachen in einer Methode
         OkHttpClient client = new OkHttpClient(); // Todo auslagern und umbennen?
         Response apiRequestTranslation;
-        String apiRequestTranslationString;
+        String apiRequestTranslatedString;
         try {
             apiRequestTranslation = client.newCall(translationApiRequest).execute();
-            apiRequestTranslationString = apiRequestTranslation.body().string();
+            apiRequestTranslatedString = apiRequestTranslation.body().string();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return apiRequestTranslationString;
+        return apiRequestTranslatedString;
     }
 
     private String parseJsonData(String apiRequestTranslationString) {
-        ObjectMapper objectMapper = new ObjectMapper(); // Todo auslagern und umbennen?
-        JsonNode jsonNode;
+        ObjectMapper mapper = new ObjectMapper(); // Todo auslagern
+        JsonNode node;
         try {
-            jsonNode = objectMapper.readTree(apiRequestTranslationString);
+            node = mapper.readTree(apiRequestTranslationString);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        return jsonNode.get("data").get("translatedText").asText();
+        return node.get("data").get("translatedText").asText();
     }
 
     // Todo Die Methode muss noch angepasst werden
     private String getTranslatedHeadline(String crawledHeadlineText) {
         RequestBody body = createNewRequestBody(crawledHeadlineText);
         Request request = createTranslationApiRequest(body);
-        String translationString = convertApiResponseToString(request);
-        return parseJsonData(translationString);
+        String translatedString = convertApiResponseToString(request);
+        return parseJsonData(translatedString);
     }
 }
