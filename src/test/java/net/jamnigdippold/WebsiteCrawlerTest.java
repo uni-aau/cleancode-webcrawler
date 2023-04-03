@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,15 +21,23 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class WebsiteCrawlerTest {
-    @InjectMocks
+    @Mock
+    private static Connection mockedConnection;
+    @Mock
+    private static Document mockedDocument;
     private static WebsiteCrawler webCrawler;
     static String htmlMock = "<html><body><h1>Heading h1</h1></body></html>";
 
-    @BeforeAll
-    static void setUp() {
+    @BeforeEach
+    void setUp() throws IOException {
+        MockitoAnnotations.openMocks(this);
+        mockedDocument = Jsoup.parse(htmlMock);
+        when(mockedConnection.get()).thenReturn(mockedDocument);
+        when(Jsoup.connect(anyString())).thenReturn(mockedConnection);
+
         webCrawler = new WebsiteCrawler("https://example.com", 1, "de"); // Todo muss noch auf die jeweiligen Sachen angepasst werden
         webCrawler.establishConnection();
-        webCrawler.setWebsiteDocumentConnection(Jsoup.parse(htmlMock));
+//        webCrawler.setWebsiteDocumentConnection(Jsoup.parse(htmlMock));
     }
 
 
