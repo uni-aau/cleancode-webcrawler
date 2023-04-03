@@ -56,7 +56,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void establishConnection() {
+    public void establishConnection() {
         try {
             websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
         } catch (IOException e) {
@@ -64,7 +64,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void crawlHeadlines() {
+    public void crawlHeadlines() {
         crawledHeadlineElements = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
     }
 
@@ -215,5 +215,13 @@ public class WebsiteCrawler {
         Response apiResponse = executeTranslationApiRequest(request);
         String translatedString = extractTranslatedText(apiResponse);
         return translatedString;
+    }
+
+    public Elements getCrawledHeadlineElements() {
+        return crawledHeadlineElements;
+    }
+
+    public List<String> getCrawledLinks() {
+        return crawledLinks;
     }
 }
