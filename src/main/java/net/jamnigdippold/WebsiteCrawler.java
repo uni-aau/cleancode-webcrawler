@@ -224,4 +224,12 @@ public class WebsiteCrawler {
     public List<String> getCrawledLinks() {
         return crawledLinks;
     }
+
+    public void setWebsiteDocumentConnection(Document websiteDocumentConnection) {
+        this.websiteDocumentConnection = websiteDocumentConnection;
+    }
+
+    public Document getWebsiteDocumentConnection() {
+        return websiteDocumentConnection;
+    }
 }
