@@ -10,8 +10,6 @@ import org.jsoup.select.Elements;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,22 +105,11 @@ public class WebsiteCrawler {
 
     private boolean isBrokenLink(String crawledLink) {
         try {
-            return checkForBrokenLink(crawledLink);
+            Jsoup.connect(crawledLink).get();
+            return false;
         } catch (IOException exception) {
             return true;
         }
-    }
-
-    private boolean checkForBrokenLink(String crawledLink) throws IOException {
-        URL link = new URL(crawledLink);
-        int response = connectToURL(link);
-        return response != HttpURLConnection.HTTP_OK;
-    }
-
-    private int connectToURL(URL link) throws IOException {
-        HttpURLConnection huc = (HttpURLConnection) link.openConnection();
-        huc.setRequestMethod("HEAD");
-        return huc.getResponseCode();
     }
 
     private void startNewCrawler(String crawledLink) {
