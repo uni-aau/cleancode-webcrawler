@@ -103,11 +103,11 @@ public class WebsiteCrawler {
         return absoluteUrl;
     }
 
-    private boolean isBrokenLink(String crawledLink) {
+    public static boolean isBrokenLink(String crawledLink) {
         try {
             Jsoup.connect(crawledLink).get();
             return false;
-        } catch (IOException exception) {
+        } catch (IOException | IllegalArgumentException exception) {
             return true;
         }
     }
