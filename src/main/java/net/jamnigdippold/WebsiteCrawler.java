@@ -1,6 +1,5 @@
 package net.jamnigdippold;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
@@ -9,32 +8,41 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.FileWriter;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WebsiteCrawler {
-    private final String websiteUrl;
-    private final int maxDepthOfRecursiveSearch;
-    private final int currentDepthOfRecursiveSearch;
+    private String websiteUrl;
+    private int maxDepthOfRecursiveSearch;
+    private int currentDepthOfRecursiveSearch;
     private Document websiteDocumentConnection;
     private Elements crawledHeadlineElements;
     private List<String> crawledLinks;
     private final String sourceLanguage = "en"; // Todo Checker für Headersprache
-    private final String targetLanguage;
+    private String targetLanguage;
+    private FileWriter fileWriter;
 
-    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage) {
-        this(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0);
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
+        try {
+            initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0, new FileWriter(outputPath));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch) {
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
+        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
+
+    }
+
+    private void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
         this.websiteUrl = websiteUrl;
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
         this.targetLanguage = targetLanguage;
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
+        this.fileWriter = writer;
     }
 
     public void startCrawling() {
@@ -44,15 +52,16 @@ public class WebsiteCrawler {
         printCrawledHeadlines();
         crawlWebsiteLinks();
         recursivelyCrawlLinkedWebsites();
+        closeWriter();
     }
 
     private void printInput() {
         if (currentDepthOfRecursiveSearch == 0) {
-            System.out.println("input: <a>" + websiteUrl + "</a>");
-            System.out.println("<br>depth: " + maxDepthOfRecursiveSearch);
-            System.out.println("<br>source language: " + sourceLanguage);
-            System.out.println("<br>Target language: " + targetLanguage);
-            System.out.println("<br>summary:");
+            printString("input: <a>" + websiteUrl + "</a>\n");
+            printString("<br>depth: " + maxDepthOfRecursiveSearch + "\n");
+            printString("<br>source language: " + sourceLanguage + "\n");
+            printString("<br>Target language: " + targetLanguage + "\n");
+            printString("<br>summary:\n");
         }
     }
 
@@ -79,11 +88,10 @@ public class WebsiteCrawler {
     private void recursivelyCrawlLinkedWebsites() { //TODO: function both starts new crawlers and prints links, but the printing should happen here to uphold desired output format (Link, Output of Link, Link, Output of Link ...)
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
-            if (!isBrokenLink(crawledLink)) {
-                printCrawledLink(crawledLink);
+            boolean isBrokenLink = isBrokenLink(crawledLink);
+            printCrawledLink(crawledLink, isBrokenLink);
+            if (!isBrokenLink) {
                 startNewCrawler(crawledLink);
-            } else {
-                printBrokenLink(crawledLink);
             }
         }
     }
@@ -95,29 +103,18 @@ public class WebsiteCrawler {
         return absoluteUrl;
     }
 
-    private boolean isBrokenLink(String crawledLink) {
+    public static boolean isBrokenLink(String crawledLink) {
         try {
-            return checkForBrokenLink(crawledLink);
-        } catch (IOException exception) {
+            Jsoup.connect(crawledLink).get();
+            return false;
+        } catch (IOException | IllegalArgumentException exception) {
             return true;
         }
     }
 
-    private boolean checkForBrokenLink(String crawledLink) throws IOException {
-        URL link = new URL(crawledLink);
-        int response = connectToURL(link);
-        return response != HttpURLConnection.HTTP_OK;
-    }
-
-    private int connectToURL(URL link) throws IOException {
-        HttpURLConnection huc = (HttpURLConnection) link.openConnection();
-        huc.setRequestMethod("HEAD");
-        return huc.getResponseCode();
-    }
-
     private void startNewCrawler(String crawledLink) {
         if (currentDepthOfRecursiveSearch < maxDepthOfRecursiveSearch) {
-            WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1);
+            WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1, fileWriter);
             recursiveCrawler.startCrawling();
         }
     }
@@ -128,40 +125,55 @@ public class WebsiteCrawler {
             if (currentDepthOfRecursiveSearch > 0) {
                 printDepthIndicator();
             }
-            System.out.println(getTranslatedHeadline(crawledHeadlineElement.text()));
+            printString(getTranslatedHeadline(crawledHeadlineElement.text()) + "\n");
         }
-        System.out.println();
+        printString("\n");
     }
 
     private void printHeaderLevel(Element crawledHeadlineElement) {
         int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0';
         for (int i = 0; i < numOfHeader; i++) {
-            System.out.print("#");
+            printString("#");
         }
-        System.out.print(" ");
+        printString(" ");
     }
 
-    private void printCrawledLink(String crawledLink) { //TODO: decide whether "avoid duplication" or "flags are ugly"/"have few arguments" is more important
-        System.out.print("<br>--");
+    private void printCrawledLink(String crawledLink, boolean isBrokenLink) {
+        printString("<br>--");
         printDepthIndicator();
-        System.out.print("link to <a>");
-        System.out.print(crawledLink);
-        System.out.println("</a>\n");
-    }
-
-    private void printBrokenLink(String crawledLink) {
-        System.out.print("<br>--");
-        printDepthIndicator();
-        System.out.print("broken link <a>");
-        System.out.print(crawledLink);
-        System.out.println("</a>\n");
+        if (isBrokenLink) printString("broken link <a>");
+        else printString("link to <a>");
+        printString(crawledLink);
+        printString("</a>\n\n");
     }
 
     private void printDepthIndicator() {
         for (int i = 0; i < currentDepthOfRecursiveSearch; i++) {
-            System.out.print("--");
+            printString("--");
         }
-        System.out.print("> ");
+        printString("> ");
+    }
+
+    private void printString(String printable) {
+        System.out.print(printable);
+        try {
+            fileWriter.write(printable);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void closeWriter() {
+        try {
+            tryCloseWriter();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void tryCloseWriter() throws IOException {
+        if (currentDepthOfRecursiveSearch == 0)
+            fileWriter.close();
     }
 
     private RequestBody createNewRequestBody(String headerText) {
