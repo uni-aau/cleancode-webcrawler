@@ -6,12 +6,13 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Rule;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.powermock.reflect.Whitebox;
+//import org.powermock.reflect.Whitebox;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class WebsiteCrawlerTest {
@@ -31,8 +33,8 @@ public class WebsiteCrawlerTest {
     private static WebsiteCrawler webCrawler;
     static String htmlMock = "<html><body><h1>Heading h1</h1><a href=\"http://example.com\">Link</a> <a href=\"./relativeUrl\"></a></body></html>";
 
-    private final static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    private final static PrintStream originalOutput = System.out;
+    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    private final PrintStream originalOutput = System.out;
 
     @BeforeEach
     public void setUp() {
@@ -52,8 +54,8 @@ public class WebsiteCrawlerTest {
         }).when(webCrawler).establishConnection();
     }
 
-    @AfterAll
-    public static void tearDown() {
+    @AfterEach
+    public void tearDown() {
         webCrawler = null;
         System.setOut(originalOutput);
     }
@@ -99,13 +101,24 @@ public class WebsiteCrawlerTest {
         assertEquals(absoluteUrl, webCrawlerConversionOutput);
     }
 
-/*    @Test
+    @Test
     public void testStringPrinting() throws IOException {
-//        webCrawler.setFileWriter(mockFileWriter);
+        String printMessage = "https://example.com";
+        webCrawler.setFileWriter(mockFileWriter);
 
-//        webCrawler.printString("test");
+        webCrawler.printString(printMessage);
 
-//        assertEquals("test", outputStream.toString());
-//        verify(mockFileWriter).write("test");
-    }*/
+        assertEquals(printMessage, outputStream.toString()); //TODO
+        verify(mockFileWriter, times(1)).write(printMessage);
+    }
+
+    @Test
+    public void testStringPrintingError() throws IOException {
+        String printMessage = "https://example.com";
+
+        doThrow(new IOException()).when(mockFileWriter).write(anyString());
+        webCrawler.setFileWriter(mockFileWriter);
+
+        assertThrows(RuntimeException.class, () -> webCrawler.printString(printMessage));
+    }
 }
