@@ -75,10 +75,26 @@ public class Main {
 
     private static void getInputFromFileChooser() {
         JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new FileNameExtensionFilter("Markdown File (.md)", "md"));
-        int status = chooser.showSaveDialog(null);
-        interpretFileChooserStatus(status);
+        int fileChooserStatus = runFileChooser(chooser);
+        interpretFileChooserStatus(fileChooserStatus);
         outputPath = chooser.getSelectedFile().getPath();
+    }
+
+    private static JFrame createFileChooserParent() {
+        JFrame jFrame = new JFrame();
+        jFrame.setLocationRelativeTo(null);
+        jFrame.setVisible(true);
+        jFrame.setExtendedState(JFrame.ICONIFIED);
+        jFrame.setExtendedState(JFrame.NORMAL);
+        return jFrame;
+    }
+
+    private static int runFileChooser(JFileChooser chooser) {
+        chooser.setFileFilter(new FileNameExtensionFilter("Markdown File (.md)", "md"));
+        JFrame parent = createFileChooserParent();
+        int status = chooser.showSaveDialog(parent);
+        parent.setVisible(false);
+        return status;
     }
 
     private static void interpretFileChooserStatus(int status) {
