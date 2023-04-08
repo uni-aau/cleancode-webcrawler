@@ -34,7 +34,6 @@ public class WebsiteCrawler {
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
         initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
-
     }
 
     private void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
@@ -77,7 +76,7 @@ public class WebsiteCrawler {
         crawledHeadlineElements = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
     }
 
-    private void crawlWebsiteLinks() {
+    public void crawlWebsiteLinks() {
         Elements crawledLinkElements = websiteDocumentConnection.select("a[href]");
         crawledLinks = new ArrayList<>();
         for (Element crawledLinkElement : crawledLinkElements) {
@@ -96,7 +95,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
+    public String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
         String absoluteUrl = relativeUrl;
         if (!relativeUrl.startsWith("http"))
             absoluteUrl = websiteUrl + relativeUrl.substring(1);
@@ -154,7 +153,7 @@ public class WebsiteCrawler {
         printString("> ");
     }
 
-    private void printString(String printable) {
+    public void printString(String printable) {
         System.out.print(printable);
         try {
             fileWriter.write(printable);
@@ -243,5 +242,9 @@ public class WebsiteCrawler {
 
     public Document getWebsiteDocumentConnection() {
         return websiteDocumentConnection;
+    }
+
+    public void setFileWriter(FileWriter fileWriter) {
+        this.fileWriter = fileWriter;
     }
 }
