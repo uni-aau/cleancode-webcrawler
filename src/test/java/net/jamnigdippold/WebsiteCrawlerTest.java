@@ -4,16 +4,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.Rule;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-//import org.powermock.reflect.Whitebox;
-
 import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -40,6 +35,7 @@ public class WebsiteCrawlerTest {
     public void setUp() {
         setUpJsoupMock();
         webCrawler.establishConnection();
+        webCrawler.setFileWriter(mockFileWriter);
         System.setOut(new PrintStream(outputStream));
     }
 
@@ -104,7 +100,6 @@ public class WebsiteCrawlerTest {
     @Test
     public void testStringPrinting() throws IOException {
         String printMessage = "https://example.com";
-        webCrawler.setFileWriter(mockFileWriter);
 
         webCrawler.printString(printMessage);
 
@@ -117,8 +112,50 @@ public class WebsiteCrawlerTest {
         String printMessage = "https://example.com";
 
         doThrow(new IOException()).when(mockFileWriter).write(anyString());
-        webCrawler.setFileWriter(mockFileWriter);
 
         assertThrows(RuntimeException.class, () -> webCrawler.printString(printMessage));
+    }
+
+    @Test
+    public void testPrintCrawledHeadlines() {
+
+    }
+
+    @Test
+    public void testPrintHeaderLevel() throws IOException {
+        String expectedPrintMessage = "# ";
+        Element crawledHeadlineElement = new Element("h1").text("Heading h1");
+
+        webCrawler.printHeaderLevel(crawledHeadlineElement);
+
+        assertEquals(expectedPrintMessage, outputStream.toString());
+
+        verify(mockFileWriter, times(1)).write("#");
+        verify(mockFileWriter, times(1)).write(" ");
+    }
+
+    @Test
+    public void testPrintZeroDepth() throws IOException {
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
+        String expectedOutputMessage = "> ";
+
+        webCrawler.printDepthIndicator();
+
+        assertEquals(expectedOutputMessage, outputStream.toString());
+
+        verify(mockFileWriter, times(1)).write("> ");
+    }
+
+    @Test
+    public void testPrintHigherDepth() throws IOException {
+        webCrawler.setCurrentDepthOfRecursiveSearch(3);
+        String expectedOutputMessage = "------> ";
+
+        webCrawler.printDepthIndicator();
+
+        assertEquals(expectedOutputMessage, outputStream.toString());
+
+        verify(mockFileWriter, times(3)).write("--");
+        verify(mockFileWriter, times(1)).write("> ");
     }
 }

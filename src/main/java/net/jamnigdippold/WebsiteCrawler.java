@@ -129,11 +129,13 @@ public class WebsiteCrawler {
         printString("\n");
     }
 
-    private void printHeaderLevel(Element crawledHeadlineElement) {
+    public void printHeaderLevel(Element crawledHeadlineElement) {
         int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0';
         for (int i = 0; i < numOfHeader; i++) {
+//            System.out.println("#");
             printString("#");
         }
+//        System.out.println(" ");
         printString(" ");
     }
 
@@ -146,7 +148,7 @@ public class WebsiteCrawler {
         printString("</a>\n\n");
     }
 
-    private void printDepthIndicator() {
+    public void printDepthIndicator() {
         for (int i = 0; i < currentDepthOfRecursiveSearch; i++) {
             printString("--");
         }
@@ -246,5 +248,9 @@ public class WebsiteCrawler {
 
     public void setFileWriter(FileWriter fileWriter) {
         this.fileWriter = fileWriter;
+    }
+
+    public void setCurrentDepthOfRecursiveSearch(int currentDepthOfRecursiveSearch) {
+        this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
     }
 }
