@@ -5,11 +5,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.util.*;
 
 public class Main {
-    private static String websiteUrl;
-    private static int depthOfRecursiveSearch;
-    private static String languageCode;
-    private static String outputPath;
-    private static Scanner inputScanner;
+    public static String websiteUrl;
+    public static int depthOfRecursiveSearch;
+    public static String languageCode;
+    public static String outputPath;
+    public static Scanner inputScanner;
 
     public static void main(String[] args) {
         getUserInput();
@@ -27,17 +27,17 @@ public class Main {
         inputScanner.close();
     }
 
-    private static void getWebsiteInput() {
+    public static void getWebsiteInput() {
         System.out.println("Enter the website url that should be crawled");
-        websiteUrl = inputScanner.next();
+        websiteUrl = inputScanner.nextLine();
 
         while (WebsiteCrawler.isBrokenLink(websiteUrl)) {
             System.err.println("ERROR: Cannot connect to url, please enter a valid url");
-            websiteUrl = inputScanner.next();
+            websiteUrl = inputScanner.nextLine();
         }
     }
 
-    private static void getDepthInput() {
+    public static void getDepthInput() {
         System.out.println("Enter the depth of search (how many additional Links should be analyzed)");
         while (true) {
             try {
@@ -48,17 +48,17 @@ public class Main {
                     break;
             } catch (InputMismatchException e) {
                 System.err.println("ERROR: Please enter a valid number.");
-                inputScanner.next();
+                inputScanner.nextLine();
             }
         }
     }
 
-    private static void getLanguageInput() {
+    public static void getLanguageInput() {
         System.out.println("Enter your language code [zB de]");
-        languageCode = inputScanner.next();
+        languageCode = inputScanner.nextLine();
         while (!isValidLanguageCode(languageCode)) {
             System.err.println("ERROR: Please enter a valid language code.");
-            languageCode = inputScanner.next();
+            languageCode = inputScanner.nextLine();
         }
     }
 
@@ -67,7 +67,7 @@ public class Main {
         return validLanguageCodes.contains(code);
     }
 
-    private static void getOutputFileInput() {
+    public static void getOutputFileInput() {
         System.out.println("Choose a location for the output File");
         getInputFromFileChooser();
         addFileExtension();
@@ -108,7 +108,7 @@ public class Main {
         }
     }
 
-    private static void addFileExtension() {
+    public static void addFileExtension() {
         if (!outputPath.endsWith(".md"))
             outputPath += ".md";
     }
