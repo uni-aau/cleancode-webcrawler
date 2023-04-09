@@ -54,7 +54,7 @@ public class WebsiteCrawler {
         closeWriter();
     }
 
-    private void printInput() {
+    public void printInput() {
         if (currentDepthOfRecursiveSearch == 0) {
             printString("input: <a>" + websiteUrl + "</a>\n");
             printString("<br>depth: " + maxDepthOfRecursiveSearch + "\n");
@@ -132,10 +132,8 @@ public class WebsiteCrawler {
     public void printHeaderLevel(Element crawledHeadlineElement) {
         int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0';
         for (int i = 0; i < numOfHeader; i++) {
-//            System.out.println("#");
             printString("#");
         }
-//        System.out.println(" ");
         printString(" ");
     }
 
