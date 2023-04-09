@@ -31,6 +31,7 @@ public class WebsiteCrawlerTest {
 
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     private final PrintStream originalOutput = System.out;
+    private Elements crawledHeadlines;
 
     @BeforeEach
     public void setUp() {
@@ -59,13 +60,11 @@ public class WebsiteCrawlerTest {
 
     @Test
     public void testHeadlineTextOutput() {
-        Elements elements = new Elements();
-        Element elem1 = new Element("h1").text("Heading h1");
-        elements.add(elem1);
+        crawledHeadlines = addElements();
 
         webCrawler.crawlHeadlines();
 
-        assertEquals(elements.text(), webCrawler.getCrawledHeadlineElements().text());
+        assertEquals(crawledHeadlines.text(), webCrawler.getCrawledHeadlineElements().text());
     }
 
     @Test
@@ -117,9 +116,23 @@ public class WebsiteCrawlerTest {
         assertThrows(RuntimeException.class, () -> webCrawler.printString(printMessage));
     }
 
+    // Todo rework
     @Test
-    public void testPrintCrawledHeadlines() {
+    public void testPrintCrawledHeadlinesZeroDepth() throws IOException {
+        String expectedHeaderLevel = "# ";
+//        String expectedDepth = "> ";
+        String expectedHeadlineTranslation = "Überschrift H1\n"; // Todo muss gemocked werden
+        String expectedPrintMessage = expectedHeaderLevel + expectedHeadlineTranslation + "\n";
 
+        crawledHeadlines = addElements();
+        webCrawler.setCrawledHeadlineElements(crawledHeadlines);
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
+        webCrawler.printCrawledHeadlines();
+
+        assertEquals(expectedPrintMessage, outputStream.toString());
+
+        verify(mockFileWriter, times(1)).write("#");
+        verify(mockFileWriter, times(1)).write(expectedHeadlineTranslation);
     }
 
     @Test
@@ -249,4 +262,10 @@ public class WebsiteCrawlerTest {
         assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
     }
 
+    private Elements addElements() {
+        Elements headlineElements = new Elements();
+        Element headline = new Element("h1").text("Heading h1");
+        headlineElements.add(headline);
+        return headlineElements;
+    }
 }

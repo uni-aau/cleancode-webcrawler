@@ -118,7 +118,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void printCrawledHeadlines() {
+    protected void printCrawledHeadlines() {
         for (Element crawledHeadlineElement : crawledHeadlineElements) {
             printHeaderLevel(crawledHeadlineElement);
             if (currentDepthOfRecursiveSearch > 0) {
@@ -230,6 +230,10 @@ public class WebsiteCrawler {
 
     public Elements getCrawledHeadlineElements() {
         return crawledHeadlineElements;
+    }
+
+    public void setCrawledHeadlineElements(Elements crawledHeadlineElements) {
+        this.crawledHeadlineElements = crawledHeadlineElements;
     }
 
     public List<String> getCrawledLinks() {
