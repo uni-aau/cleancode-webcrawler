@@ -116,7 +116,7 @@ public class WebsiteCrawlerTest {
         assertThrows(RuntimeException.class, () -> webCrawler.printString(printMessage));
     }
 
-    // Todo rework
+    // Todo rework + HigherDepth
     @Test
     public void testPrintCrawledHeadlinesZeroDepth() throws IOException {
         String expectedHeaderLevel = "# ";
@@ -150,9 +150,9 @@ public class WebsiteCrawlerTest {
 
     @Test
     public void testPrintZeroDepth() throws IOException {
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
         String expectedOutputMessage = "> ";
 
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
         webCrawler.printDepthIndicator();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
@@ -162,9 +162,9 @@ public class WebsiteCrawlerTest {
 
     @Test
     public void testPrintHigherDepth() throws IOException {
-        webCrawler.setCurrentDepthOfRecursiveSearch(3);
         String expectedOutputMessage = "------> ";
 
+        webCrawler.setCurrentDepthOfRecursiveSearch(3);
         webCrawler.printDepthIndicator();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
@@ -181,8 +181,8 @@ public class WebsiteCrawlerTest {
         String targetLanguageInput = "<br>Target language: de\n";
         String summaryInput = "<br>summary:\n";
         String expectedOutputMessage = websiteUrlInput + depthInput + sourceLanguageInput + targetLanguageInput + summaryInput;
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
 
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
         webCrawler.printInput();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
@@ -201,8 +201,8 @@ public class WebsiteCrawlerTest {
         String firstLinkPart = "link to <a>";
         String crawledTestLink = "http://example.com";
         String secondLinkPart = "</a>\n\n";
-        boolean isBrokenLink = false;
         String expectedOutputMessage = lineBreakMessage + depthIndicatorMessage + firstLinkPart + crawledTestLink + secondLinkPart;
+        boolean isBrokenLink = false;
 
         webCrawler.printCrawledLink(crawledTestLink, isBrokenLink);
 
@@ -239,7 +239,6 @@ public class WebsiteCrawlerTest {
     @Test
     public void testSuccessfulFileWriterClosure() throws IOException {
         webCrawler.setCurrentDepthOfRecursiveSearch(0);
-
         webCrawler.closeWriter();
 
         verify(mockFileWriter, times(1)).close();
@@ -248,7 +247,6 @@ public class WebsiteCrawlerTest {
     @Test
     public void testUnsuccessfulFileWriterClosure() throws IOException {
         webCrawler.setCurrentDepthOfRecursiveSearch(1);
-
         webCrawler.closeWriter();
 
         verify(mockFileWriter, times(0)).close();
@@ -256,7 +254,6 @@ public class WebsiteCrawlerTest {
 
     @Test
     public void testFileWriterClosureError() throws IOException {
-
         doThrow(new IOException()).when(mockFileWriter).close();
 
         assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
