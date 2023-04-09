@@ -137,7 +137,7 @@ public class WebsiteCrawler {
         printString(" ");
     }
 
-    private void printCrawledLink(String crawledLink, boolean isBrokenLink) {
+    public void printCrawledLink(String crawledLink, boolean isBrokenLink) {
         printString("<br>--");
         printDepthIndicator();
         if (isBrokenLink) printString("broken link <a>");
@@ -162,7 +162,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void closeWriter() {
+    public void closeWriter() {
         try {
             tryCloseWriter();
         } catch (IOException e) {
@@ -170,7 +170,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void tryCloseWriter() throws IOException {
+    public void tryCloseWriter() throws IOException {
         if (currentDepthOfRecursiveSearch == 0)
             fileWriter.close();
     }

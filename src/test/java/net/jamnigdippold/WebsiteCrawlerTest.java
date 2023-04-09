@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -158,4 +159,94 @@ public class WebsiteCrawlerTest {
         verify(mockFileWriter, times(3)).write("--");
         verify(mockFileWriter, times(1)).write("> ");
     }
+
+    @Test
+    public void testPrintWebcrawlerInput() throws IOException {
+        String websiteUrlInput = "input: <a>https://example.com</a>\n";
+        String depthInput = "<br>depth: 1\n";
+        String sourceLanguageInput = "<br>source language: en\n";
+        String targetLanguageInput = "<br>Target language: de\n";
+        String summaryInput = "<br>summary:\n";
+        String expectedOutputMessage = websiteUrlInput + depthInput + sourceLanguageInput + targetLanguageInput + summaryInput;
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
+
+        webCrawler.printInput();
+
+        assertEquals(expectedOutputMessage, outputStream.toString());
+
+        verify(mockFileWriter, times(1)).write(websiteUrlInput);
+        verify(mockFileWriter, times(1)).write(depthInput);
+        verify(mockFileWriter, times(1)).write(sourceLanguageInput);
+        verify(mockFileWriter, times(1)).write(targetLanguageInput);
+        verify(mockFileWriter, times(1)).write(summaryInput);
+    }
+
+    @Test
+    public void testPrintCrawledWorkingLink() throws IOException {
+        String lineBreakMessage = "<br>--";
+        String depthIndicatorMessage = "> ";
+        String firstLinkPart = "link to <a>";
+        String crawledTestLink = "http://example.com";
+        String secondLinkPart = "</a>\n\n";
+        boolean isBrokenLink = false;
+        String expectedOutputMessage = lineBreakMessage + depthIndicatorMessage + firstLinkPart + crawledTestLink + secondLinkPart;
+
+        webCrawler.printCrawledLink(crawledTestLink, isBrokenLink);
+
+        assertEquals(expectedOutputMessage, outputStream.toString());
+
+        verify(mockFileWriter, times(1)).write(lineBreakMessage);
+        verify(mockFileWriter, times(1)).write(depthIndicatorMessage);
+        verify(mockFileWriter, times(1)).write(firstLinkPart);
+        verify(mockFileWriter, times(1)).write(crawledTestLink);
+        verify(mockFileWriter, times(1)).write(secondLinkPart);
+    }
+
+    @Test
+    public void testPrintCrawledBrokenLink() throws IOException {
+        String lineBreakMessage = "<br>--";
+        String depthIndicatorMessage = "> ";
+        String firstLinkPart = "broken link <a>";
+        String crawledTestLink = "http://example.com";
+        String secondLinkPart = "</a>\n\n";
+        boolean isBrokenLink = true;
+        String expectedOutputMessage = lineBreakMessage + depthIndicatorMessage + firstLinkPart + crawledTestLink + secondLinkPart;
+
+        webCrawler.printCrawledLink(crawledTestLink, isBrokenLink);
+
+        assertEquals(expectedOutputMessage, outputStream.toString());
+
+        verify(mockFileWriter, times(1)).write(lineBreakMessage);
+        verify(mockFileWriter, times(1)).write(depthIndicatorMessage);
+        verify(mockFileWriter, times(1)).write(firstLinkPart);
+        verify(mockFileWriter, times(1)).write(crawledTestLink);
+        verify(mockFileWriter, times(1)).write(secondLinkPart);
+    }
+
+    @Test
+    public void testSuccessfulFileWriterClosure() throws IOException {
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
+
+        webCrawler.closeWriter();
+
+        verify(mockFileWriter, times(1)).close();
+    }
+
+    @Test
+    public void testUnsuccessfulFileWriterClosure() throws IOException {
+        webCrawler.setCurrentDepthOfRecursiveSearch(1);
+
+        webCrawler.closeWriter();
+
+        verify(mockFileWriter, times(0)).close();
+    }
+
+    @Test
+    public void testFileWriterClosureError() throws IOException {
+
+        doThrow(new IOException()).when(mockFileWriter).close();
+
+        assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
+    }
+
 }
