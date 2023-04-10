@@ -23,6 +23,7 @@ public class WebsiteCrawler {
     private final String sourceLanguage = "en"; // Todo Checker für Headersprache
     private String targetLanguage;
     private FileWriter fileWriter;
+    private OkHttpClient client = new OkHttpClient();
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
         try {
@@ -175,7 +176,7 @@ public class WebsiteCrawler {
             fileWriter.close();
     }
 
-    private RequestBody createNewRequestBody(String headerText) {
+    protected RequestBody createNewRequestBody(String headerText) {
         return new FormBody.Builder()
                 .add("source_language", sourceLanguage)
                 .add("target_language", targetLanguage)
@@ -193,8 +194,7 @@ public class WebsiteCrawler {
                 .build();
     }
 
-    private Response executeTranslationApiRequest(Request translationApiRequest) {
-        OkHttpClient client = new OkHttpClient();
+    protected Response executeTranslationApiRequest(Request translationApiRequest) {
         try {
             return client.newCall(translationApiRequest).execute();
         } catch (IOException e) {
@@ -202,7 +202,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private String extractTranslatedText(Response apiResponse) {
+    protected String extractTranslatedText(Response apiResponse) {
         try {
             return extractTranslation(apiResponse);
         } catch (IOException e) {
@@ -244,15 +244,15 @@ public class WebsiteCrawler {
         this.websiteDocumentConnection = websiteDocumentConnection;
     }
 
-    public Document getWebsiteDocumentConnection() {
-        return websiteDocumentConnection;
-    }
-
     public void setFileWriter(FileWriter fileWriter) {
         this.fileWriter = fileWriter;
     }
 
     public void setCurrentDepthOfRecursiveSearch(int currentDepthOfRecursiveSearch) {
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
+    }
+
+    public void setClient(OkHttpClient client) {
+        this.client = client;
     }
 }
