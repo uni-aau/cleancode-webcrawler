@@ -105,7 +105,7 @@ public class MainTest {
 
     private void assertTestGetDepthInputError() {
         Assertions.assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
-        Assertions.assertEquals("ERROR: Please enter a valid number.\r\nERROR: Please enter a positive number." + System.getProperty("line.separator"), errContent.toString());
+        Assertions.assertEquals("ERROR: Please enter a valid number." + System.getProperty("line.separator") + "ERROR: Please enter a positive number." + System.getProperty("line.separator"), errContent.toString());
         Assertions.assertEquals(3, Main.depthOfRecursiveSearch);
     }
 
@@ -136,7 +136,7 @@ public class MainTest {
 
     private void assertTestGetWebsiteInputError() {
         Assertions.assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
-        Assertions.assertEquals("ERROR: Cannot connect to url, please enter a valid url\r\nERROR: Cannot connect to url, please enter a valid url\r\n", errContent.toString());
+        Assertions.assertEquals("ERROR: Cannot connect to url, please enter a valid url" + System.getProperty("line.separator") + "ERROR: Cannot connect to url, please enter a valid url" + System.getProperty("line.separator"), errContent.toString());
         Assertions.assertEquals("https://www.google.com", Main.websiteUrl);
     }
 
