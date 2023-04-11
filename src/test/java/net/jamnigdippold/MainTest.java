@@ -74,8 +74,8 @@ public class MainTest {
     }
 
     private void assertTestGetLanguageError() {
-        Assertions.assertEquals("Enter your language code [zB de]\r\n", outContent.toString());
-        Assertions.assertEquals("ERROR: Please enter a valid language code.\r\nERROR: Please enter a valid language code.\r\n", errContent.toString());
+        Assertions.assertEquals("Enter your language code [zB de]" + System.getProperty("line.separator"), outContent.toString());
+        Assertions.assertEquals("ERROR: Please enter a valid language code." + System.getProperty("line.separator") + "ERROR: Please enter a valid language code." + System.getProperty("line.separator"), errContent.toString());
         Assertions.assertEquals("en", Main.languageCode);
     }
 
@@ -104,8 +104,8 @@ public class MainTest {
     }
 
     private void assertTestGetDepthInputError() {
-        Assertions.assertEquals("Enter the depth of search (how many additional Links should be analyzed)\r\n", outContent.toString());
-        Assertions.assertEquals("ERROR: Please enter a valid number.\r\nERROR: Please enter a positive number.\r\n", errContent.toString());
+        Assertions.assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
+        Assertions.assertEquals("ERROR: Please enter a valid number.\r\nERROR: Please enter a positive number." + System.getProperty("line.separator"), errContent.toString());
         Assertions.assertEquals(3, Main.depthOfRecursiveSearch);
     }
 
