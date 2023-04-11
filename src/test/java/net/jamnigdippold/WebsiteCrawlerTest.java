@@ -33,6 +33,8 @@ public class WebsiteCrawlerTest {
     @Mock
     Response mockResponse;
     @Mock
+    ResponseBody mockResponseBody;
+    @Mock
     Call mockCall;
     private static WebsiteCrawler webCrawler;
     static String htmlMock = "<html><body><h1>Heading h1</h1><a href=\"http://example.com\">Link</a> <a href=\"./relativeUrl\"></a></body></html>";
@@ -289,8 +291,7 @@ public class WebsiteCrawlerTest {
     // Todo verbessern?
     @Test
     public void testTranslationRequestExecution() throws IOException {
-        when(mockClient.newCall(mockRequest)).thenReturn(mockCall);
-        when(mockCall.execute()).thenReturn(mockResponse);
+        mockNewClientCall();
 
         webCrawler.setClient(mockClient);
 
@@ -299,7 +300,7 @@ public class WebsiteCrawlerTest {
 
     @Test
     public void testTranslationRequestExecutionError() throws IOException {
-        when(mockClient.newCall(mockRequest)).thenReturn(mockCall);
+        mockNewClientCall();
         doThrow(new IOException()).when(mockCall).execute();
 
         webCrawler.setClient(mockClient);
@@ -307,7 +308,34 @@ public class WebsiteCrawlerTest {
         assertThrows(RuntimeException.class, () -> webCrawler.executeTranslationApiRequest(mockRequest));
     }
 
+    @Test
+    public void testTranslationExtraction() throws IOException {
+        String expectedReturnValue = "Ueberschrift h1";
+        mockResponseExtraction();
 
+        String actualReturnValue = webCrawler.extractTranslatedText(mockResponse);
+
+        assertEquals(expectedReturnValue, actualReturnValue);
+    }
+
+    @Test
+    public void testTranslatedTextExtractionError() throws IOException {
+        mockResponseExtraction();
+        doThrow(new IOException()).when(mockResponseBody).string();
+
+        assertThrows(RuntimeException.class, () -> webCrawler.extractTranslatedText(mockResponse));
+    }
+
+    private void mockNewClientCall() throws IOException {
+        when(mockClient.newCall(mockRequest)).thenReturn(mockCall);
+        when(mockCall.execute()).thenReturn(mockResponse);
+    }
+
+    private void mockResponseExtraction() throws IOException {
+        String responseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n} ok";
+        when(mockResponse.body()).thenReturn(mockResponseBody);
+        when(mockResponseBody.string()).thenReturn(responseOutput);
+    }
 
     private Elements addElements() {
         Elements headlineElements = new Elements();

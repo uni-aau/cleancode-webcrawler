@@ -210,7 +210,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private String extractTranslation(Response apiResponse) throws IOException {
+    protected String extractTranslation(Response apiResponse) throws IOException {
         String apiResponseBody;
         JsonNode node;
 
