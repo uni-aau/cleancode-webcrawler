@@ -16,9 +16,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -73,7 +71,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testHeadlineTextOutput() {
+    void testHeadlineTextOutput() {
         crawledHeadlines = addElements();
 
         webCrawler.crawlHeadlines();
@@ -82,7 +80,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testWebsiteLinksCrawlingOutput() {
+    void testWebsiteLinksCrawlingOutput() {
         List<String> crawledLinks = new ArrayList<>();
         crawledLinks.add("http://example.com");
         crawledLinks.add("./relativeUrl");
@@ -93,7 +91,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testConversionAbsoluteToRelativeUrl() {
+    void testConversionAbsoluteToRelativeUrl() {
         String relativeUrl = "./relativeUrl";
         String absoluteUrl = "https://example.com/relativeUrl";
 
@@ -103,7 +101,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testNoConversionAbsoluteToRelativeUrl() {
+    void testNoConversionAbsoluteToRelativeUrl() {
         String absoluteUrl = "https://example.com/relativeUrl";
 
         String webCrawlerConversionOutput = webCrawler.convertRelativeUrlToAbsoluteURL(absoluteUrl);
@@ -112,7 +110,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testStringPrinting() throws IOException {
+    void testStringPrinting() throws IOException {
         String printMessage = "https://example.com";
 
         webCrawler.printString(printMessage);
@@ -122,7 +120,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testStringPrintingError() throws IOException {
+    void testStringPrintingError() throws IOException {
         String printMessage = "https://example.com";
 
         doThrow(new IOException()).when(mockFileWriter).write(anyString());
@@ -133,7 +131,7 @@ public class WebsiteCrawlerTest {
 /*
     // Todo rework + HigherDepth
     @Test
-    public void testPrintCrawledHeadlinesZeroDepth() throws IOException {
+    void testPrintCrawledHeadlinesZeroDepth() throws IOException {
         String expectedHeaderLevel = "# ";
 //        String expectedDepth = "> ";
         String expectedHeadlineTranslation = "Überschrift H1\n"; // Todo muss gemocked werden
@@ -152,7 +150,7 @@ public class WebsiteCrawlerTest {
 */
 
     @Test
-    public void testPrintHeaderLevel() throws IOException {
+    void testPrintHeaderLevel() throws IOException {
         String expectedPrintMessage = "# ";
         Element crawledHeadlineElement = new Element("h1").text("Heading h1");
 
@@ -165,7 +163,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testPrintZeroDepth() throws IOException {
+    void testPrintZeroDepth() throws IOException {
         String expectedOutputMessage = "> ";
 
         webCrawler.setCurrentDepthOfRecursiveSearch(0);
@@ -177,7 +175,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testPrintHigherDepth() throws IOException {
+    void testPrintHigherDepth() throws IOException {
         String expectedOutputMessage = "------> ";
 
         webCrawler.setCurrentDepthOfRecursiveSearch(3);
@@ -190,7 +188,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testPrintWebcrawlerInput() throws IOException {
+    void testPrintWebcrawlerInput() throws IOException {
         String websiteUrlInput = "input: <a>https://example.com</a>\n";
         String depthInput = "<br>depth: 1\n";
         String sourceLanguageInput = "<br>source language: en\n";
@@ -211,7 +209,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testPrintCrawledWorkingLink() throws IOException {
+    void testPrintCrawledWorkingLink() throws IOException {
         String lineBreakMessage = "<br>--";
         String depthIndicatorMessage = "> ";
         String firstLinkPart = "link to <a>";
@@ -232,7 +230,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testPrintCrawledBrokenLink() throws IOException {
+    void testPrintCrawledBrokenLink() throws IOException {
         String lineBreakMessage = "<br>--";
         String depthIndicatorMessage = "> ";
         String firstLinkPart = "broken link <a>";
@@ -253,7 +251,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testSuccessfulFileWriterClosure() throws IOException {
+    void testSuccessfulFileWriterClosure() throws IOException {
         webCrawler.setCurrentDepthOfRecursiveSearch(0);
         webCrawler.closeWriter();
 
@@ -261,7 +259,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testUnsuccessfulFileWriterClosure() throws IOException {
+    void testUnsuccessfulFileWriterClosure() throws IOException {
         webCrawler.setCurrentDepthOfRecursiveSearch(1);
         webCrawler.closeWriter();
 
@@ -269,14 +267,14 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testFileWriterClosureError() throws IOException {
+    void testFileWriterClosureError() throws IOException {
         doThrow(new IOException()).when(mockFileWriter).close();
 
         assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
     }
 
     @Test
-    public void testRequestBodyCreation() throws IOException {
+    void testRequestBodyCreation() throws IOException {
         String sourceLanguage = "en";
         String targetLanguage = "de";
         String headerText = "Headline 1";
@@ -290,7 +288,7 @@ public class WebsiteCrawlerTest {
 
     // Todo verbessern?
     @Test
-    public void testTranslationRequestExecution() throws IOException {
+    void testTranslationRequestExecution() throws IOException {
         mockNewClientCall();
 
         webCrawler.setClient(mockClient);
@@ -299,7 +297,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testTranslationRequestExecutionError() throws IOException {
+    void testTranslationRequestExecutionError() throws IOException {
         mockNewClientCall();
         doThrow(new IOException()).when(mockCall).execute();
 
@@ -309,7 +307,7 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testTranslationExtraction() throws IOException {
+    void testTranslationExtraction() throws IOException {
         String expectedReturnValue = "Ueberschrift h1";
         mockResponseExtraction();
 
@@ -319,22 +317,22 @@ public class WebsiteCrawlerTest {
     }
 
     @Test
-    public void testTranslatedTextExtractionError() throws IOException {
+    void testTranslatedTextExtractionError() throws IOException {
         mockResponseExtraction();
         doThrow(new IOException()).when(mockResponseBody).string();
 
         assertThrows(RuntimeException.class, () -> webCrawler.extractTranslatedText(mockResponse));
     }
 
-//    @Test // Todo kann nicht getestet werden
-    public void testTranslationApiRequestCreation() {
+    //    @Test //Todo kann nicht getestet werden
+    void testTranslationApiRequestCreation() {
         String sourceLanguage = "en";
         String targetLanguage = "de";
         String headerText = "Headline 1";
         createBody(sourceLanguage, targetLanguage, headerText);
         createRequest();
 
-        Request actualRequestOutput =  webCrawler.createTranslationApiRequest(expectedBody);
+        Request actualRequestOutput = webCrawler.createTranslationApiRequest(expectedBody);
 
         assertEquals(expectedRequest.body(), actualRequestOutput.body());
         assertEquals(expectedRequest.url(), actualRequestOutput.url());

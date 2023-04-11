@@ -55,7 +55,7 @@ public class WebsiteCrawler {
         closeWriter();
     }
 
-    public void printInput() {
+    protected void printInput() {
         if (currentDepthOfRecursiveSearch == 0) {
             printString("input: <a>" + websiteUrl + "</a>\n");
             printString("<br>depth: " + maxDepthOfRecursiveSearch + "\n");
@@ -65,7 +65,7 @@ public class WebsiteCrawler {
         }
     }
 
-    public void establishConnection() {
+    protected void establishConnection() {
         try {
             websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
         } catch (IOException e) {
@@ -73,11 +73,11 @@ public class WebsiteCrawler {
         }
     }
 
-    public void crawlHeadlines() {
+    protected void crawlHeadlines() {
         crawledHeadlineElements = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
     }
 
-    public void crawlWebsiteLinks() {
+    protected void crawlWebsiteLinks() {
         Elements crawledLinkElements = websiteDocumentConnection.select("a[href]");
         crawledLinks = new ArrayList<>();
         for (Element crawledLinkElement : crawledLinkElements) {
@@ -96,14 +96,14 @@ public class WebsiteCrawler {
         }
     }
 
-    public String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
+    protected String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
         String absoluteUrl = relativeUrl;
         if (!relativeUrl.startsWith("http"))
             absoluteUrl = websiteUrl + relativeUrl.substring(1);
         return absoluteUrl;
     }
 
-    public static boolean isBrokenLink(String crawledLink) {
+    protected static boolean isBrokenLink(String crawledLink) {
         try {
             Jsoup.connect(crawledLink).get();
             return false;
@@ -130,7 +130,7 @@ public class WebsiteCrawler {
         printString("\n");
     }
 
-    public void printHeaderLevel(Element crawledHeadlineElement) {
+    protected void printHeaderLevel(Element crawledHeadlineElement) {
         int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0';
         for (int i = 0; i < numOfHeader; i++) {
             printString("#");
@@ -138,7 +138,7 @@ public class WebsiteCrawler {
         printString(" ");
     }
 
-    public void printCrawledLink(String crawledLink, boolean isBrokenLink) {
+    protected void printCrawledLink(String crawledLink, boolean isBrokenLink) {
         printString("<br>--");
         printDepthIndicator();
         if (isBrokenLink) printString("broken link <a>");
@@ -147,14 +147,14 @@ public class WebsiteCrawler {
         printString("</a>\n\n");
     }
 
-    public void printDepthIndicator() {
+    protected void printDepthIndicator() {
         for (int i = 0; i < currentDepthOfRecursiveSearch; i++) {
             printString("--");
         }
         printString("> ");
     }
 
-    public void printString(String printable) {
+    protected void printString(String printable) {
         System.out.print(printable);
         try {
             fileWriter.write(printable);
@@ -163,7 +163,7 @@ public class WebsiteCrawler {
         }
     }
 
-    public void closeWriter() {
+    protected void closeWriter() {
         try {
             tryCloseWriter();
         } catch (IOException e) {
@@ -171,7 +171,7 @@ public class WebsiteCrawler {
         }
     }
 
-    public void tryCloseWriter() throws IOException {
+    protected void tryCloseWriter() throws IOException {
         if (currentDepthOfRecursiveSearch == 0)
             fileWriter.close();
     }
