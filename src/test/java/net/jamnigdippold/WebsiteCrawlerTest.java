@@ -340,11 +340,12 @@ public class WebsiteCrawlerTest {
     }
 
     private void createRequest() {
+        String apiKey = System.getenv("RAPIDAPI_API_KEY");
         expectedRequest = new Request.Builder()
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(expectedBody)
                 .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", "fe74ad9331msh075615faa2bbedap19fc94jsn8e377fd515bc")
+                .addHeader("X-RapidAPI-Key", apiKey)
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
     }

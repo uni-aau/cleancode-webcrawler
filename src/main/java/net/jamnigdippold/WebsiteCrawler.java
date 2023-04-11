@@ -185,11 +185,12 @@ public class WebsiteCrawler {
     }
 
     protected Request createTranslationApiRequest(RequestBody body) {
+        String apiKey = System.getenv("RAPIDAPI_API_KEY");
         return new Request.Builder()
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
                 .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", "fe74ad9331msh075615faa2bbedap19fc94jsn8e377fd515bc")
+                .addHeader("X-RapidAPI-Key", apiKey)
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
     }
