@@ -61,7 +61,7 @@ public class MainTest {
     }
 
     private void assertTestGetLanguage() {
-        Assertions.assertEquals("Enter your language code [zB de]\r\n", outContent.toString());
+        Assertions.assertEquals("Enter your language code [zB de]" + System.getProperty("line.separator"), outContent.toString());
         Assertions.assertEquals("", errContent.toString());
         Assertions.assertEquals("en", Main.languageCode);
     }
@@ -89,7 +89,7 @@ public class MainTest {
     }
 
     private void assertTestGetDepthInput() {
-        Assertions.assertEquals("Enter the depth of search (how many additional Links should be analyzed)\r\n", outContent.toString());
+        Assertions.assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
         Assertions.assertEquals("", errContent.toString());
         Assertions.assertEquals(3, Main.depthOfRecursiveSearch);
     }
@@ -119,7 +119,7 @@ public class MainTest {
     }
 
     private void assertTestGetWebsiteInput() {
-        Assertions.assertEquals("Enter the website url that should be crawled\r\n", outContent.toString());
+        Assertions.assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
         Assertions.assertEquals("", errContent.toString());
         Assertions.assertEquals("https://www.google.com", Main.websiteUrl);
         mockedCrawler.verify(() -> WebsiteCrawler.isBrokenLink("https://www.google.com"));
@@ -135,7 +135,7 @@ public class MainTest {
     }
 
     private void assertTestGetWebsiteInputError() {
-        Assertions.assertEquals("Enter the website url that should be crawled\r\n", outContent.toString());
+        Assertions.assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
         Assertions.assertEquals("ERROR: Cannot connect to url, please enter a valid url\r\nERROR: Cannot connect to url, please enter a valid url\r\n", errContent.toString());
         Assertions.assertEquals("https://www.google.com", Main.websiteUrl);
     }
