@@ -36,8 +36,10 @@ public class WebsiteCrawlerTest {
     ResponseBody mockResponseBody;
     @Mock
     Call mockCall;
+    private FormBody expectedBody;
+    private Request expectedRequest;
     private static WebsiteCrawler webCrawler;
-    static String htmlMock = "<html><body><h1>Heading h1</h1><a href=\"http://example.com\">Link</a> <a href=\"./relativeUrl\"></a></body></html>";
+    static String htmlMock = "<html><expectedBody><h1>Heading h1</h1><a href=\"http://example.com\">Link</a> <a href=\"./relativeUrl\"></a></expectedBody></html>";
 
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     private final PrintStream originalOutput = System.out;
@@ -276,11 +278,7 @@ public class WebsiteCrawlerTest {
         String sourceLanguage = "en";
         String targetLanguage = "de";
         String headerText = "Headline 1";
-        FormBody expectedBody = new FormBody.Builder()
-                .add("source_language", sourceLanguage)
-                .add("target_language", targetLanguage)
-                .add("text", headerText)
-                .build();
+        createBody(sourceLanguage, targetLanguage, headerText);
 
         RequestBody actualBody = webCrawler.createNewRequestBody(headerText);
 
@@ -324,6 +322,39 @@ public class WebsiteCrawlerTest {
         doThrow(new IOException()).when(mockResponseBody).string();
 
         assertThrows(RuntimeException.class, () -> webCrawler.extractTranslatedText(mockResponse));
+    }
+
+    @Test
+    public void testTranslationApiRequestCreation() {
+        String sourceLanguage = "en";
+        String targetLanguage = "de";
+        String headerText = "Headline 1";
+        createBody(sourceLanguage, targetLanguage, headerText);
+        createRequest();
+
+        Request actualRequestOutput =  webCrawler.createTranslationApiRequest(expectedBody);
+
+        assertEquals(expectedRequest.body(), actualRequestOutput.body());
+        assertEquals(expectedRequest.url(), actualRequestOutput.url());
+        assertEquals(expectedRequest.headers(), actualRequestOutput.headers());
+    }
+
+    private void createRequest() {
+        expectedRequest = new Request.Builder()
+                .url("https://text-translator2.p.rapidapi.com/translate")
+                .post(expectedBody)
+                .addHeader("content-type", "application/x-www-form-urlencoded")
+                .addHeader("X-RapidAPI-Key", "fe74ad9331msh075615faa2bbedap19fc94jsn8e377fd515bc")
+                .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
+                .build();
+    }
+
+    private void createBody(String sourceLanguage, String targetLanguage, String headerText) {
+        expectedBody = new FormBody.Builder()
+                .add("source_language", sourceLanguage)
+                .add("target_language", targetLanguage)
+                .add("text", headerText)
+                .build();
     }
 
     private void mockNewClientCall() throws IOException {

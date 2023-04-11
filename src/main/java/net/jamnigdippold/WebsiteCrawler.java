@@ -184,7 +184,7 @@ public class WebsiteCrawler {
                 .build();
     }
 
-    private Request createTranslationApiRequest(RequestBody body) {
+    protected Request createTranslationApiRequest(RequestBody body) {
         return new Request.Builder()
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
