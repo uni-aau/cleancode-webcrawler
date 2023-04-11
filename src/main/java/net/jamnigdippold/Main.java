@@ -55,10 +55,10 @@ public class Main {
 
     public static void getLanguageInput() {
         System.out.println("Enter your language code [zB de]");
-        languageCode = inputScanner.nextLine();
+        languageCode = inputScanner.next();
         while (!isValidLanguageCode(languageCode)) {
             System.err.println("ERROR: Please enter a valid language code.");
-            languageCode = inputScanner.nextLine();
+            languageCode = inputScanner.next();
         }
     }
 
