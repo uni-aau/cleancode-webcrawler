@@ -19,8 +19,6 @@ public class MainTest {
     private final PrintStream defaultOut = System.out;
     private final PrintStream defaultErr = System.err;
 
-    private SecurityManager defaultSecurityManager;
-
     private MockedStatic<WebsiteCrawler> mockedCrawler;
     private MockedStatic<Main> mockedMain;
 
@@ -35,10 +33,8 @@ public class MainTest {
     public void tearDown() {
         System.setOut(defaultOut);
         System.setErr(defaultErr);
+        System.setSecurityManager(null);
         closeMocks();
-        if (defaultSecurityManager != null) {
-            System.setSecurityManager(defaultSecurityManager);
-        }
     }
 
     private void closeMocks() {
@@ -80,7 +76,6 @@ public class MainTest {
     }
 
     private void mockSystemExit() {
-        defaultSecurityManager = System.getSecurityManager();
         System.setSecurityManager(new SecurityManager() {
             @Override
             public void checkPermission(Permission perm) {
