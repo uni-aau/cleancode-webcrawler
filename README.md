@@ -20,7 +20,7 @@ Alle Daten werden in eine zuvor angegebene Markdown (.md) Datei gespeichert und 
 - **Maven:** 3.5.1 oder höher
 - **Verwendeter Code-Editor:** IntelliJ IDEA
 ### Installation
-- Da eine **Translation-API** verwendet wird, muss vor der Ausführung ein Translation-API Key als **Systemumgebungsvariable** festgelegt werden
+- Da eine [**Translation-API**](https://rapidapi.com/dickyagustin/api/text-translator2) verwendet wird, muss vor der Ausführung ein Translation-API Key als **Systemumgebungsvariable** festgelegt werden
   - **API-Name:** ``RAPIDAPI_API_KEY``
   - **API-Key** (für Contributor des Projekts): [Github Repository Secret](https://github.com/uni-aau/delta-dkt/settings/secrets/actions)
   - **Hinzufügung zu Windows:** Systemumgebungsvariablen bearbeiten -> Umgebungsvariablen -> Benutzervariablen
