@@ -53,6 +53,7 @@ public class Main {
                 inputScanner.nextLine();
             }
         }
+        inputScanner.nextLine();
     }
 
     public static void getLanguageInput() {
