@@ -49,7 +49,7 @@ public class MainTest {
     }
 
     @Test
-    public void testGetInputFromFileChooser() {
+    void testGetInputFromFileChooser() {
         mockJFileChooser(0, "Test.txt");
 
         Main.getOutputFileInput();
@@ -58,7 +58,7 @@ public class MainTest {
     }
 
     @Test
-    public void testGetWrongInputFromFileChooser() {
+    void testGetWrongInputFromFileChooser() {
         mockJFileChooser(JFileChooser.ERROR_OPTION, "Test");
         mockSystemExit();
 
@@ -67,7 +67,7 @@ public class MainTest {
     }
 
     @Test
-    public void testAbortFileChooser() {
+    void testAbortFileChooser() {
         mockJFileChooser(JFileChooser.CANCEL_OPTION, "Test");
         mockSystemExit();
 
@@ -100,7 +100,7 @@ public class MainTest {
     }
 
     @Test
-    public void testAddFileExtension() {
+    void testAddFileExtension() {
         Main.outputPath = "E:\\RealFolder\\output";
 
         Main.addFileExtension();
@@ -110,7 +110,7 @@ public class MainTest {
     }
 
     @Test
-    public void testUnnecessaryAddFileExtension() {
+    void testUnnecessaryAddFileExtension() {
         Main.outputPath = "E:\\RealFolder\\output.md";
 
         Main.addFileExtension();
@@ -119,7 +119,7 @@ public class MainTest {
     }
 
     @Test
-    public void testGetLanguageInput() {
+    void testGetLanguageInput() {
         mockInputScanner("en");
         Main.getLanguageInput();
         assertTestGetLanguage();
@@ -132,7 +132,7 @@ public class MainTest {
     }
 
     @Test
-    public void testGetLanguageInputError() {
+    void testGetLanguageInputError() {
         mockInputScanner("Not a language code\nef\nen");
         Main.getLanguageInput();
         assertTestGetLanguageError();
@@ -145,7 +145,7 @@ public class MainTest {
     }
 
     @Test
-    public void testGetDepthInput() {
+    void testGetDepthInput() {
         mockInputScanner("3\n");
 
         Main.getDepthInput();
@@ -160,7 +160,7 @@ public class MainTest {
     }
 
     @Test
-    public void testGetDepthInputError() {
+    void testGetDepthInputError() {
         mockInputScanner("Number\n-1\n3\n");
 
         Main.getDepthInput();
@@ -175,7 +175,7 @@ public class MainTest {
     }
 
     @Test
-    public void testGetWebsiteInput() {
+    void testGetWebsiteInput() {
         setUpTestGetWebsiteInput("https://www.google.com\n");
 
         Main.getWebsiteInput();
@@ -191,7 +191,7 @@ public class MainTest {
     }
 
     @Test
-    public void testGetWebsiteInputError() {
+    void testGetWebsiteInputError() {
         setUpTestGetWebsiteInput("wrong URL format\nhttps://www.notARealWebsite.com\nhttps://www.google.com\n");
 
         Main.getWebsiteInput();
