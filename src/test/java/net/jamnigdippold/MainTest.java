@@ -62,7 +62,7 @@ public class MainTest {
         mockJFileChooser(JFileChooser.ERROR_OPTION, "Test");
         mockSystemExit();
 
-        Assertions.assertThrows(SecurityException.class, Main::getOutputFileInput, "-1");
+        Assertions.assertThrows(RuntimeException.class, Main::getOutputFileInput, "SecurityException: Tried to exit with status -1");
         Assertions.assertEquals("ERROR: Unexpected error. Stopping program." + System.getProperty("line.separator"), errContent.toString());
     }
 
@@ -71,7 +71,7 @@ public class MainTest {
         mockJFileChooser(JFileChooser.CANCEL_OPTION, "Test");
         mockSystemExit();
 
-        Assertions.assertThrows(SecurityException.class, Main::getOutputFileInput, "0");
+        Assertions.assertThrows(RuntimeException.class, Main::getOutputFileInput, "SecurityException: Tried to exit with status 0");
         Assertions.assertEquals("ERROR: File choosing aborted. Stopping program." + System.getProperty("line.separator"), errContent.toString());
     }
 
@@ -84,7 +84,7 @@ public class MainTest {
             @Override
             public void checkExit(int status) {
                 super.checkExit(status);
-                throw new SecurityException(status + "");
+                throw new RuntimeException("SecurityException: Tried to exit with status " + status);
             }
         });
     }
