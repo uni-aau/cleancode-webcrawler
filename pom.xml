@@ -60,6 +60,9 @@
                     <mutators>
                         <mutator>STRONGER</mutator>
                     </mutators>
+                    <jvmArgs>
+                        <jvmArg>-Djava.awt.headless=false</jvmArg>
+                    </jvmArgs>
                 </configuration>
                 <executions>
                     <execution>
