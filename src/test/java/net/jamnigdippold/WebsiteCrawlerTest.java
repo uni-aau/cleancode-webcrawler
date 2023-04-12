@@ -41,6 +41,7 @@ class WebsiteCrawlerTest {
     private static WebsiteCrawler webCrawler;
     static String htmlMock = "<html><expectedBody><h1>Heading h1</h1><a href=\"http://example.com\">Link</a> <a href=\"./relativeUrl\"></a></expectedBody></html>";
 
+    private String originalApiKey;
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     private final PrintStream originalOutput = System.out;
     private Elements crawledHeadlines;
@@ -324,26 +325,36 @@ class WebsiteCrawlerTest {
         assertThrows(RuntimeException.class, () -> webCrawler.extractTranslatedText(mockResponse));
     }
 
-    //    @Test //Todo kann nicht getestet werden
+    @Test
     void testTranslationApiRequestCreation() {
         String sourceLanguage = "en";
         String targetLanguage = "de";
         String headerText = "Headline 1";
         createBody(sourceLanguage, targetLanguage, headerText);
         createRequest();
+        mockSystemGetenv();
 
         Request actualRequestOutput = webCrawler.createTranslationApiRequest(expectedBody);
+
+        unmockSystemGetenv();
 
         assertEquals(expectedRequest.body(), actualRequestOutput.body());
         assertEquals(expectedRequest.url(), actualRequestOutput.url());
         assertEquals(expectedRequest.headers(), actualRequestOutput.headers());
     }
 
+    private void mockSystemGetenv() {
+        originalApiKey = System.getProperty("RAPIDAPI_API_KEY");
+        System.setProperty("RAPIDAPI_API_KEY", "mocked-api-key");
+    }
+
+    private void unmockSystemGetenv() {
+        if (originalApiKey != null)
+            System.setProperty("RAPIDAPI_API_KEY", originalApiKey);
+    }
+
     private void createRequest() {
         String mockApiKey = "mocked-api-key";
-        mockStatic(System.class);
-        when(System.getenv("RAPIDAPI_API_KEY")).thenReturn(mockApiKey);
-
         expectedRequest = new Request.Builder()
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(expectedBody)
