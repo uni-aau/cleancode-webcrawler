@@ -13,7 +13,7 @@ import java.io.*;
 import java.security.Permission;
 import java.util.Scanner;
 
-public class MainTest {
+class MainTest {
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private final PrintStream defaultOut = System.out;
