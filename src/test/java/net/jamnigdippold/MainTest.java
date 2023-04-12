@@ -8,7 +8,9 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import javax.swing.*;
 import java.io.*;
+import java.security.Permission;
 import java.util.Scanner;
 
 public class MainTest {
@@ -17,7 +19,10 @@ public class MainTest {
     private final PrintStream defaultOut = System.out;
     private final PrintStream defaultErr = System.err;
 
+    private SecurityManager defaultSecurityManager;
+
     private MockedStatic<WebsiteCrawler> mockedCrawler;
+    private MockedStatic<Main> mockedMain;
 
     @BeforeEach
     public void setUp() {
@@ -30,8 +35,73 @@ public class MainTest {
     public void tearDown() {
         System.setOut(defaultOut);
         System.setErr(defaultErr);
-        if (mockedCrawler != null)
+        closeMocks();
+        if (defaultSecurityManager != null) {
+            System.setSecurityManager(defaultSecurityManager);
+        }
+    }
+
+    private void closeMocks() {
+        if (mockedCrawler != null) {
             mockedCrawler.close();
+            mockedCrawler = null;
+        }
+        if (mockedMain != null) {
+            mockedMain.close();
+            mockedMain = null;
+        }
+    }
+
+    @Test
+    public void testGetInputFromFileChooser() {
+        mockJFileChooser(0, "Test.txt");
+
+        Main.getOutputFileInput();
+
+        Assertions.assertEquals("Test.txt.md", Main.outputPath);
+    }
+
+    @Test
+    public void testGetWrongInputFromFileChooser() {
+        mockJFileChooser(JFileChooser.ERROR_OPTION, "Test");
+        mockSystemExit();
+
+        Assertions.assertThrows(SecurityException.class, Main::getOutputFileInput, "-1");
+        Assertions.assertEquals("ERROR: Unexpected error. Stopping program." + System.getProperty("line.separator"), errContent.toString());
+    }
+
+    @Test
+    public void testAbortFileChooser() {
+        mockJFileChooser(JFileChooser.CANCEL_OPTION, "Test");
+        mockSystemExit();
+
+        Assertions.assertThrows(SecurityException.class, Main::getOutputFileInput, "0");
+        Assertions.assertEquals("ERROR: File choosing aborted. Stopping program." + System.getProperty("line.separator"), errContent.toString());
+    }
+
+    private void mockSystemExit() {
+        defaultSecurityManager = System.getSecurityManager();
+        System.setSecurityManager(new SecurityManager() {
+            @Override
+            public void checkPermission(Permission perm) {
+            }
+
+            @Override
+            public void checkExit(int status) {
+                super.checkExit(status);
+                throw new SecurityException(status + "");
+            }
+        });
+    }
+
+    private void mockJFileChooser(int returnCode, String chosenPath) {
+        mockedMain = Mockito.mockStatic(Main.class, Mockito.CALLS_REAL_METHODS);
+        mockedMain.when(Main::createFileChooser).then(invocationOnMock -> {
+            Main.fileChooser = Mockito.mock(JFileChooser.class);
+            Mockito.when(Main.fileChooser.showSaveDialog(Mockito.any())).thenReturn(returnCode);
+            Mockito.when(Main.fileChooser.getSelectedFile()).thenReturn(new File(chosenPath));
+            return null;
+        });
     }
 
     @Test

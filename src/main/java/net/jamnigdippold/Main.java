@@ -10,6 +10,8 @@ public class Main {
     public static String languageCode;
     public static String outputPath;
     public static Scanner inputScanner;
+    public static JFileChooser fileChooser;
+    public static int fileChooserStatus;
 
     public static void main(String[] args) {
         getUserInput();
@@ -73,14 +75,14 @@ public class Main {
         addFileExtension();
     }
 
-    private static void getInputFromFileChooser() {
-        JFileChooser chooser = new JFileChooser();
-        int fileChooserStatus = runFileChooser(chooser);
-        interpretFileChooserStatus(fileChooserStatus);
-        outputPath = chooser.getSelectedFile().getPath();
+    public static void getInputFromFileChooser() {
+        createFileChooser();
+        runFileChooser();
+        interpretFileChooserStatus();
+        outputPath = fileChooser.getSelectedFile().getPath();
     }
 
-    private static JFrame createFileChooserParent() {
+    public static JFrame createFileChooserParent() {
         JFrame jFrame = new JFrame();
         jFrame.setLocationRelativeTo(null);
         jFrame.setVisible(true);
@@ -89,20 +91,23 @@ public class Main {
         return jFrame;
     }
 
-    private static int runFileChooser(JFileChooser chooser) {
-        chooser.setFileFilter(new FileNameExtensionFilter("Markdown File (.md)", "md"));
-        JFrame parent = createFileChooserParent();
-        int status = chooser.showSaveDialog(parent);
-        parent.setVisible(false);
-        return status;
+    public static void createFileChooser() {
+        fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Markdown File (.md)", "md"));
     }
 
-    private static void interpretFileChooserStatus(int status) {
-        if (status == JFileChooser.CANCEL_OPTION) {
+    public static void runFileChooser() {
+        JFrame parent = createFileChooserParent();
+        fileChooserStatus = fileChooser.showSaveDialog(parent);
+        parent.setVisible(false);
+    }
+
+    public static void interpretFileChooserStatus() {
+        if (fileChooserStatus == JFileChooser.CANCEL_OPTION) {
             System.err.println("ERROR: File choosing aborted. Stopping program.");
             System.exit(0);
         }
-        if (status == JFileChooser.ERROR_OPTION) {
+        if (fileChooserStatus == JFileChooser.ERROR_OPTION) {
             System.err.println("ERROR: Unexpected error. Stopping program.");
             System.exit(-1);
         }
