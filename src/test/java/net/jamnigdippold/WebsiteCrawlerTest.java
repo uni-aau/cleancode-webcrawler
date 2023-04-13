@@ -41,7 +41,6 @@ class WebsiteCrawlerTest {
     private static WebsiteCrawler webCrawler;
     static String htmlMock = "<html><expectedBody><h1>Heading h1</h1><a href=\"http://example.com\">Link</a> <a href=\"./relativeUrl\"></a></expectedBody></html>";
 
-    private String originalApiKey;
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     private final PrintStream originalOutput = System.out;
     private Elements crawledHeadlines;
@@ -63,6 +62,7 @@ class WebsiteCrawlerTest {
             webCrawler.setWebsiteDocumentConnection(mockedDocument);
             return null;
         }).when(webCrawler).establishConnection();
+        doReturn("mocked-api-key").when(webCrawler).getApiKey();
     }
 
     @AfterEach
@@ -332,25 +332,12 @@ class WebsiteCrawlerTest {
         String headerText = "Headline 1";
         createBody(sourceLanguage, targetLanguage, headerText);
         createRequest();
-        mockSystemGetenv();
 
         Request actualRequestOutput = webCrawler.createTranslationApiRequest(expectedBody);
-
-        unmockSystemGetenv();
 
         assertEquals(expectedRequest.body(), actualRequestOutput.body());
         assertEquals(expectedRequest.url(), actualRequestOutput.url());
         assertEquals(expectedRequest.headers(), actualRequestOutput.headers());
-    }
-
-    private void mockSystemGetenv() {
-        originalApiKey = System.getProperty("RAPIDAPI_API_KEY");
-        System.setProperty("RAPIDAPI_API_KEY", "mocked-api-key");
-    }
-
-    private void unmockSystemGetenv() {
-        if (originalApiKey != null)
-            System.setProperty("RAPIDAPI_API_KEY", originalApiKey);
     }
 
     private void createRequest() {

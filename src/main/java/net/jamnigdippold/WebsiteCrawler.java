@@ -192,7 +192,7 @@ public class WebsiteCrawler {
     }
 
     protected Request createTranslationApiRequest(RequestBody body) {
-        String apiKey = System.getProperty("RAPIDAPI_API_KEY");
+        String apiKey = getApiKey();
         return new Request.Builder()
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
@@ -200,6 +200,10 @@ public class WebsiteCrawler {
                 .addHeader("X-RapidAPI-Key", apiKey)
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
+    }
+
+    protected String getApiKey() {
+        return System.getenv("RAPIDAPI_API_KEY");
     }
 
     protected Response executeTranslationApiRequest(Request translationApiRequest) {
