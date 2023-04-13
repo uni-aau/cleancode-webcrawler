@@ -11,10 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +23,6 @@ import static org.mockito.Mockito.*;
 class WebsiteCrawlerTest {
 
     private static Document mockedDocument;
-    @Mock
-    FileWriter mockFileWriter;
     @Mock
     Request mockRequest;
     @Mock
@@ -40,7 +37,7 @@ class WebsiteCrawlerTest {
     private Request expectedRequest;
     private static WebsiteCrawler webCrawler;
     static String htmlMock = "<html><expectedBody><h1>Heading h1</h1><a href=\"http://example.com\">Link</a> <a href=\"./relativeUrl\"></a></expectedBody></html>";
-
+    private String testFilePath = "testFile.txt";
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     private final PrintStream originalOutput = System.out;
     private Elements crawledHeadlines;
@@ -49,26 +46,28 @@ class WebsiteCrawlerTest {
     public void setUp() {
         setUpJsoupMock();
         webCrawler.establishConnection();
-        webCrawler.setFileWriter(mockFileWriter);
         System.setOut(new PrintStream(outputStream));
     }
 
     private void setUpJsoupMock() {
         MockitoAnnotations.openMocks(this);
         mockedDocument = Jsoup.parse(htmlMock);
-        webCrawler = spy(new WebsiteCrawler("https://example.com", 1, "de", "main"));// Todo muss noch auf die jeweiligen Sachen angepasst werden
+        webCrawler = spy(new WebsiteCrawler("https://example.com", 1, "de", testFilePath));// Todo muss noch auf die jeweiligen Sachen angepasst werden
 
         doAnswer(invocationOnMock -> {
             webCrawler.setWebsiteDocumentConnection(mockedDocument);
             return null;
         }).when(webCrawler).establishConnection();
-        doReturn("mocked-api-key").when(webCrawler).getApiKey();
+        webCrawler.establishConnection();
     }
 
     @AfterEach
     public void tearDown() {
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
+        webCrawler.closeWriter();
         webCrawler = null;
         System.setOut(originalOutput);
+        new File(testFilePath).delete();
     }
 
     @Test
@@ -117,38 +116,38 @@ class WebsiteCrawlerTest {
         webCrawler.printString(printMessage);
 
         assertEquals(printMessage, outputStream.toString());
-        verify(mockFileWriter, times(1)).write(printMessage);
+        assertEqualFileContent(printMessage, testFilePath);
     }
+
 
     @Test
     void testStringPrintingError() throws IOException {
         String printMessage = "https://example.com";
 
-        doThrow(new IOException()).when(mockFileWriter).write(anyString());
+        webCrawler.closeWriter();
 
         assertThrows(RuntimeException.class, () -> webCrawler.printString(printMessage));
     }
 
-/*
-    // Todo rework + HigherDepth
+
     @Test
     void testPrintCrawledHeadlinesZeroDepth() throws IOException {
         String expectedHeaderLevel = "# ";
-//        String expectedDepth = "> ";
-        String expectedHeadlineTranslation = "Überschrift H1\n"; // Todo muss gemocked werden
-        String expectedPrintMessage = expectedHeaderLevel + expectedHeadlineTranslation + "\n";
+        String expectedHeadlineTranslation = "Überschrift h1";
+        String expectedPrintMessage = expectedHeaderLevel + expectedHeadlineTranslation + "\n\n";
+        mockHeadingTranslation();
 
         crawledHeadlines = addElements();
         webCrawler.setCrawledHeadlineElements(crawledHeadlines);
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
         webCrawler.printCrawledHeadlines();
 
         assertEquals(expectedPrintMessage, outputStream.toString());
-
-        verify(mockFileWriter, times(1)).write("#");
-        verify(mockFileWriter, times(1)).write(expectedHeadlineTranslation);
+        assertEqualFileContent(expectedPrintMessage, testFilePath);
     }
-*/
+
+    void mockHeadingTranslation() {
+        doReturn("Überschrift h1").when(webCrawler).getTranslatedHeadline("Heading h1");
+    }
 
     @Test
     void testPrintHeaderLevel() throws IOException {
@@ -158,9 +157,7 @@ class WebsiteCrawlerTest {
         webCrawler.printHeaderLevel(crawledHeadlineElement);
 
         assertEquals(expectedPrintMessage, outputStream.toString());
-
-        verify(mockFileWriter, times(1)).write("#");
-        verify(mockFileWriter, times(1)).write(" ");
+        assertEqualFileContent("# ", testFilePath);
     }
 
     @Test
@@ -171,8 +168,7 @@ class WebsiteCrawlerTest {
         webCrawler.printDepthIndicator();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
-
-        verify(mockFileWriter, times(1)).write("> ");
+        assertEqualFileContent(expectedOutputMessage, testFilePath);
     }
 
     @Test
@@ -183,9 +179,7 @@ class WebsiteCrawlerTest {
         webCrawler.printDepthIndicator();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
-
-        verify(mockFileWriter, times(3)).write("--");
-        verify(mockFileWriter, times(1)).write("> ");
+        assertEqualFileContent(expectedOutputMessage, testFilePath);
     }
 
     @Test
@@ -201,12 +195,7 @@ class WebsiteCrawlerTest {
         webCrawler.printInput();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
-
-        verify(mockFileWriter, times(1)).write(websiteUrlInput);
-        verify(mockFileWriter, times(1)).write(depthInput);
-        verify(mockFileWriter, times(1)).write(sourceLanguageInput);
-        verify(mockFileWriter, times(1)).write(targetLanguageInput);
-        verify(mockFileWriter, times(1)).write(summaryInput);
+        assertEqualFileContent(expectedOutputMessage, testFilePath);
     }
 
     @Test
@@ -222,12 +211,7 @@ class WebsiteCrawlerTest {
         webCrawler.printCrawledLink(crawledTestLink, isBrokenLink);
 
         assertEquals(expectedOutputMessage, outputStream.toString());
-
-        verify(mockFileWriter, times(1)).write(lineBreakMessage);
-        verify(mockFileWriter, times(1)).write(depthIndicatorMessage);
-        verify(mockFileWriter, times(1)).write(firstLinkPart);
-        verify(mockFileWriter, times(1)).write(crawledTestLink);
-        verify(mockFileWriter, times(1)).write(secondLinkPart);
+        assertEqualFileContent(expectedOutputMessage, testFilePath);
     }
 
     @Test
@@ -243,12 +227,7 @@ class WebsiteCrawlerTest {
         webCrawler.printCrawledLink(crawledTestLink, isBrokenLink);
 
         assertEquals(expectedOutputMessage, outputStream.toString());
-
-        verify(mockFileWriter, times(1)).write(lineBreakMessage);
-        verify(mockFileWriter, times(1)).write(depthIndicatorMessage);
-        verify(mockFileWriter, times(1)).write(firstLinkPart);
-        verify(mockFileWriter, times(1)).write(crawledTestLink);
-        verify(mockFileWriter, times(1)).write(secondLinkPart);
+        assertEqualFileContent(expectedOutputMessage, testFilePath);
     }
 
     @Test
@@ -256,7 +235,7 @@ class WebsiteCrawlerTest {
         webCrawler.setCurrentDepthOfRecursiveSearch(0);
         webCrawler.closeWriter();
 
-        verify(mockFileWriter, times(1)).close();
+        assertThrows(RuntimeException.class, () -> webCrawler.printString("test"));
     }
 
     @Test
@@ -264,12 +243,13 @@ class WebsiteCrawlerTest {
         webCrawler.setCurrentDepthOfRecursiveSearch(1);
         webCrawler.closeWriter();
 
-        verify(mockFileWriter, times(0)).close();
+        assertDoesNotThrow(() -> webCrawler.printString("test"));
     }
 
-    @Test
+
+    //@Test TODO: Find way to force Exception from FileWriter without Mocking it
     void testFileWriterClosureError() throws IOException {
-        doThrow(new IOException()).when(mockFileWriter).close();
+       // doThrow(new IOException()).when(mockFileWriter).close();
 
         assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
     }
@@ -332,6 +312,7 @@ class WebsiteCrawlerTest {
         String headerText = "Headline 1";
         createBody(sourceLanguage, targetLanguage, headerText);
         createRequest();
+        doReturn("mocked-api-key").when(webCrawler).getApiKey();
 
         Request actualRequestOutput = webCrawler.createTranslationApiRequest(expectedBody);
 
@@ -375,5 +356,11 @@ class WebsiteCrawlerTest {
         Element headline = new Element("h1").text("Heading h1");
         headlineElements.add(headline);
         return headlineElements;
+    }
+
+    private void assertEqualFileContent(String expected, String path) throws IOException {
+        webCrawler.flushWriter();
+        String content = new String(Files.readAllBytes(Paths.get(path)));
+        assertEquals(expected, content);
     }
 }

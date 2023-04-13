@@ -253,7 +253,7 @@ public class WebsiteCrawler {
 
     }
 
-    private String getTranslatedHeadline(String crawledHeadlineText) {
+    protected String getTranslatedHeadline(String crawledHeadlineText) {
         Response apiResponse = executeAPIRequest(crawledHeadlineText);
         String translatedString = extractTranslatedText(apiResponse);
         if (translatedString == null)
@@ -289,15 +289,15 @@ public class WebsiteCrawler {
         this.websiteDocumentConnection = websiteDocumentConnection;
     }
 
-    public void setFileWriter(FileWriter fileWriter) {
-        this.fileWriter = fileWriter;
-    }
-
     public void setCurrentDepthOfRecursiveSearch(int currentDepthOfRecursiveSearch) {
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
     }
 
     public void setClient(OkHttpClient client) {
         this.client = client;
+    }
+
+    public void flushWriter() throws IOException {
+        fileWriter.flush();
     }
 }
