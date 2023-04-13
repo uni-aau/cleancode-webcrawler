@@ -192,7 +192,7 @@ class WebsiteCrawlerTest {
     void testPrintWebcrawlerInput() throws IOException {
         String websiteUrlInput = "input: <a>https://example.com</a>\n";
         String depthInput = "<br>depth: 1\n";
-        String sourceLanguageInput = "<br>source language: en\n";
+        String sourceLanguageInput = "<br>source language: auto\n";
         String targetLanguageInput = "<br>Target language: de\n";
         String summaryInput = "<br>summary:\n";
         String expectedOutputMessage = websiteUrlInput + depthInput + sourceLanguageInput + targetLanguageInput + summaryInput;
@@ -276,7 +276,7 @@ class WebsiteCrawlerTest {
 
     @Test
     void testRequestBodyCreation() throws IOException {
-        String sourceLanguage = "en";
+        String sourceLanguage = "auto";
         String targetLanguage = "de";
         String headerText = "Headline 1";
         createBody(sourceLanguage, targetLanguage, headerText);
@@ -327,7 +327,7 @@ class WebsiteCrawlerTest {
 
     @Test
     void testTranslationApiRequestCreation() {
-        String sourceLanguage = "en";
+        String sourceLanguage = "auto";
         String targetLanguage = "de";
         String headerText = "Headline 1";
         createBody(sourceLanguage, targetLanguage, headerText);

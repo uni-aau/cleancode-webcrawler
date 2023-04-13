@@ -20,7 +20,7 @@ public class WebsiteCrawler {
     private Document websiteDocumentConnection;
     private Elements crawledHeadlineElements;
     private List<String> crawledLinks;
-    private final String sourceLanguage = "en"; // Todo Checker für Headersprache
+    private String sourceLanguage;
     private String targetLanguage;
     private FileWriter fileWriter;
     private OkHttpClient client = new OkHttpClient();
@@ -41,14 +41,16 @@ public class WebsiteCrawler {
         this.websiteUrl = websiteUrl;
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
         this.targetLanguage = targetLanguage;
+        this.sourceLanguage = "auto";
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
         this.fileWriter = writer;
     }
 
     public void startCrawling() {
-        printInput();
         establishConnection();
         crawlHeadlines();
+        setSourceLanguage();
+        printInput();
         printCrawledHeadlines();
         crawlWebsiteLinks();
         recursivelyCrawlLinkedWebsites();
@@ -117,6 +119,11 @@ public class WebsiteCrawler {
             WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1, fileWriter);
             recursiveCrawler.startCrawling();
         }
+    }
+
+    protected void setSourceLanguage() {
+        String headline = crawledHeadlineElements.get(0).text();
+        sourceLanguage = getLanguageCodeFromHeadline(headline);
     }
 
     protected void printCrawledHeadlines() {
@@ -217,16 +224,49 @@ public class WebsiteCrawler {
 
         apiResponseBody = apiResponse.body().string();
         node = new ObjectMapper().readTree(apiResponseBody);
+        if (node.get("status").asText().equals("success"))
+            return node.get("data").get("translatedText").asText();
+        else
+            return null;
+    }
 
-        return node.get("data").get("translatedText").asText();
+    protected String extractLanguageCode(Response apiResponse) {
+        try {
+            return tryToExtractLanguageCode(apiResponse);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected String tryToExtractLanguageCode(Response apiResponse) throws IOException {
+        String apiResponseBody;
+        JsonNode node;
+
+        apiResponseBody = apiResponse.body().string();
+        node = new ObjectMapper().readTree(apiResponseBody);
+
+        return node.get("data").get("detectedSourceLanguage").get("code").asText();
+
     }
 
     private String getTranslatedHeadline(String crawledHeadlineText) {
+        Response apiResponse = executeAPIRequest(crawledHeadlineText);
+        String translatedString = extractTranslatedText(apiResponse);
+        if (translatedString == null)
+            translatedString = crawledHeadlineText;
+        return translatedString;
+    }
+
+    private String getLanguageCodeFromHeadline(String crawledHeadlineText) {
+        Response apiResponse = executeAPIRequest(crawledHeadlineText);
+        return extractLanguageCode(apiResponse);
+    }
+
+    private Response executeAPIRequest(String crawledHeadlineText) {
         RequestBody body = createNewRequestBody(crawledHeadlineText);
         Request request = createTranslationApiRequest(body);
         Response apiResponse = executeTranslationApiRequest(request);
-        String translatedString = extractTranslatedText(apiResponse);
-        return translatedString;
+        return apiResponse;
     }
 
     public Elements getCrawledHeadlineElements() {
