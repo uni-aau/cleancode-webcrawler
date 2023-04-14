@@ -1,6 +1,7 @@
 package net.jamnigdippold;
 
 import okhttp3.*;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,9 +10,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -33,6 +39,7 @@ class WebsiteCrawlerTest {
     ResponseBody mockResponseBody;
     @Mock
     Call mockCall;
+    MockedStatic<Jsoup> mockedJsoup;
     private FormBody expectedBody;
     private Request expectedRequest;
     private static WebsiteCrawler webCrawler;
@@ -44,12 +51,12 @@ class WebsiteCrawlerTest {
 
     @BeforeEach
     public void setUp() {
-        setUpJsoupMock();
+        mockEstablishConnection();
         webCrawler.establishConnection();
         System.setOut(new PrintStream(outputStream));
     }
 
-    private void setUpJsoupMock() {
+    private void mockEstablishConnection() {
         MockitoAnnotations.openMocks(this);
         mockedDocument = Jsoup.parse(htmlMock);
         webCrawler = spy(new WebsiteCrawler("https://example.com", 1, "de", testFilePath));// Todo muss noch auf die jeweiligen Sachen angepasst werden
@@ -129,7 +136,6 @@ class WebsiteCrawlerTest {
         assertThrows(RuntimeException.class, () -> webCrawler.printString(printMessage));
     }
 
-
     @Test
     void testPrintCrawledHeadlinesZeroDepth() throws IOException {
         String expectedHeaderLevel = "# ";
@@ -145,8 +151,76 @@ class WebsiteCrawlerTest {
         assertEqualFileContent(expectedPrintMessage, testFilePath);
     }
 
+    @Test
+    void testPrintCrawledHeadlinesOneDepth() throws IOException {
+        String expectedHeaderLevel = "# ";
+        String expectedDepthLevel = "--> ";
+        String expectedHeadlineTranslation = "Überschrift h1";
+        String expectedPrintMessage = expectedHeaderLevel + expectedDepthLevel + expectedHeadlineTranslation + "\n\n";
+        mockHeadingTranslation();
+
+        crawledHeadlines = addElements();
+        webCrawler.setCrawledHeadlineElements(crawledHeadlines);
+        webCrawler.setCurrentDepthOfRecursiveSearch(1);
+        webCrawler.printCrawledHeadlines();
+
+        assertEquals(expectedPrintMessage, outputStream.toString());
+        assertEqualFileContent(expectedPrintMessage, testFilePath);
+    }
+
     void mockHeadingTranslation() {
         doReturn("Überschrift h1").when(webCrawler).getTranslatedHeadline("Heading h1");
+    }
+
+    @Test
+    void testIsBrokenLinkMalformedURL() throws IOException {
+        mockJsoup();
+        boolean isBrokenLink = WebsiteCrawler.isBrokenLink("Not a real URL");
+        assertTrue(isBrokenLink);
+        mockedJsoup.close();
+    }
+
+    @Test
+    void testIsBrokenLinkUnreachableURL() throws IOException {
+        mockJsoup();
+        boolean isBrokenLink = WebsiteCrawler.isBrokenLink("https://looksRealButIsNot");
+        assertTrue(isBrokenLink);
+        mockedJsoup.close();
+    }
+
+    @Test
+    void testIsBrokenLinkSuccess() throws IOException {
+        mockJsoup();
+        boolean isBrokenLink = WebsiteCrawler.isBrokenLink("https://example.com");
+        assertFalse(isBrokenLink);
+        mockedJsoup.close();
+    }
+
+    void mockJsoup() throws IOException {
+        Connection mockedConnection = mock(Connection.class);
+        when(mockedConnection.get()).thenAnswer(invocationOnMock -> {
+            if (mockedConnection.toString().equals("Not a real URL")) {
+                throw new MalformedURLException();
+            }
+            if (mockedConnection.toString().equals("https://looksRealButIsNot")) {
+                throw new IOException();
+            }
+            return null;
+        });
+
+        mockedJsoup = mockStatic(Jsoup.class);
+        mockedJsoup.when(() -> Jsoup.connect(any())).thenAnswer(invocationOnMock -> {
+            when(mockedConnection.toString()).thenReturn(invocationOnMock.getArgument(0));
+            return mockedConnection;
+        });
+    }
+
+    @Test
+    void testGetSystemEnv() {
+        String expectedKey = System.getenv("RAPIDAPI_API_KEY");
+        String returnedKey = webCrawler.getApiKey();
+
+        assertEquals(expectedKey, returnedKey);
     }
 
     @Test
@@ -249,7 +323,7 @@ class WebsiteCrawlerTest {
 
     //@Test TODO: Find way to force Exception from FileWriter without Mocking it
     void testFileWriterClosureError() throws IOException {
-       // doThrow(new IOException()).when(mockFileWriter).close();
+        // doThrow(new IOException()).when(mockFileWriter).close();
 
         assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
     }
