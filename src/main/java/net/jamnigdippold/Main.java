@@ -20,13 +20,21 @@ public class Main {
         System.exit(0);
     }
 
-    private static void getUserInput() {
+    private static void closeScanner() {
+        inputScanner.close();
+    }
+
+    protected static void setupScanner() {
         inputScanner = new Scanner(System.in);
+    }
+
+    protected static void getUserInput() {
+        setupScanner();
         getWebsiteInput();
         getDepthInput();
         getLanguageInput();
         getOutputFileInput();
-        inputScanner.close();
+        closeScanner();
     }
 
     public static void getWebsiteInput() {
@@ -83,8 +91,12 @@ public class Main {
         outputPath = fileChooser.getSelectedFile().getPath();
     }
 
+    public static JFrame createJFrame() {
+        return new JFrame();
+    }
+
     public static JFrame createFileChooserParent() {
-        JFrame jFrame = new JFrame();
+        JFrame jFrame = createJFrame();
         jFrame.setLocationRelativeTo(null);
         jFrame.setVisible(true);
         jFrame.setExtendedState(JFrame.ICONIFIED);
