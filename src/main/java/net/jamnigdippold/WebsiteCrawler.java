@@ -261,12 +261,12 @@ public class WebsiteCrawler {
         return translatedString;
     }
 
-    private String getLanguageCodeFromHeadline(String crawledHeadlineText) {
+    protected String getLanguageCodeFromHeadline(String crawledHeadlineText) {
         Response apiResponse = executeAPIRequest(crawledHeadlineText);
         return extractLanguageCode(apiResponse);
     }
 
-    private Response executeAPIRequest(String crawledHeadlineText) {
+    protected Response executeAPIRequest(String crawledHeadlineText) {
         RequestBody body = createNewRequestBody(crawledHeadlineText);
         Request request = createTranslationApiRequest(body);
         Response apiResponse = executeTranslationApiRequest(request);

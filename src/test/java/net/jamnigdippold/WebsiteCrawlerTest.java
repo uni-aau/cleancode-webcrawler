@@ -346,8 +346,6 @@ class WebsiteCrawlerTest {
     void testTranslationRequestExecution() throws IOException {
         mockNewClientCall();
 
-        webCrawler.setClient(mockClient);
-
         assertNotNull(webCrawler.executeTranslationApiRequest(mockRequest));
     }
 
@@ -356,15 +354,14 @@ class WebsiteCrawlerTest {
         mockNewClientCall();
         doThrow(new IOException()).when(mockCall).execute();
 
-        webCrawler.setClient(mockClient);
-
         assertThrows(RuntimeException.class, () -> webCrawler.executeTranslationApiRequest(mockRequest));
     }
 
     @Test
     void testTranslationExtraction() throws IOException {
         String expectedReturnValue = "Ueberschrift h1";
-        mockResponseExtraction();
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
 
         String actualReturnValue = webCrawler.extractTranslatedText(mockResponse);
 
@@ -373,10 +370,84 @@ class WebsiteCrawlerTest {
 
     @Test
     void testTranslatedTextExtractionError() throws IOException {
-        mockResponseExtraction();
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
         doThrow(new IOException()).when(mockResponseBody).string();
 
         assertThrows(RuntimeException.class, () -> webCrawler.extractTranslatedText(mockResponse));
+    }
+
+    @Test
+    void testTranslatedTextExtractionFallback() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"error\",\n\"message\": \"source language cannot be the same as target language\"\n}";
+        mockResponseExtraction(expectedResponseOutput);
+
+        String actualReturnValue = webCrawler.extractTranslatedText(mockResponse);
+
+        assertNull(actualReturnValue);
+    }
+
+    @Test
+    void testLanguageCodeExtraction() throws IOException {
+        String expectedLanguageCode = "en";
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+
+        String actualLanguageCode = webCrawler.extractLanguageCode(mockResponse);
+
+        assertEquals(expectedLanguageCode, actualLanguageCode);
+    }
+
+    @Test
+    void testLanguageCodeExtractionError() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+        doThrow(new IOException()).when(mockResponseBody).string();
+
+        assertThrows(RuntimeException.class, () -> webCrawler.extractLanguageCode(mockResponse));
+    }
+
+    @Test
+    void testGetTranslatedHeadline() throws IOException {
+        String expectedTranslatedHeadline = "Ueberschrift h1";
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+        doReturn(mockResponse).when(webCrawler).executeAPIRequest("Heading h1");
+        String actualTranslatedHeadline = webCrawler.getTranslatedHeadline("Heading h1");
+
+        assertEquals(expectedTranslatedHeadline, actualTranslatedHeadline);
+    }
+
+    @Test
+    void testGetTranslatedHeadlineFallback() throws IOException {
+        String expectedTranslatedHeadline = "Heading h1";
+        String expectedResponseOutput = "{\n\"status\": \"error\",\n\"message\": \"source language cannot be the same as target language\"\n}";
+        mockResponseExtraction(expectedResponseOutput);
+        doReturn(mockResponse).when(webCrawler).executeAPIRequest("Heading h1");
+        String actualTranslatedHeadline = webCrawler.getTranslatedHeadline("Heading h1");
+
+        assertEquals(expectedTranslatedHeadline, actualTranslatedHeadline);
+    }
+
+    @Test
+    void testGetLanguageCodeFromHeadline() throws IOException {
+        String expectedLanguageCode = "en";
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+        doReturn(mockResponse).when(webCrawler).executeAPIRequest("Heading h1");
+        String actualLanguageCode = webCrawler.getLanguageCodeFromHeadline("Heading h1");
+
+        assertEquals(expectedLanguageCode, actualLanguageCode);
+    }
+
+    @Test
+    void testExecuteAPIRequest() throws IOException {
+        mockNewClientCall();
+        mockGetAPIKey();
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+        Response actualResponse = webCrawler.executeAPIRequest("Heading h1");
+        assertEquals(mockResponse.body().string(), actualResponse.body().string());
     }
 
     @Test
@@ -386,7 +457,7 @@ class WebsiteCrawlerTest {
         String headerText = "Headline 1";
         createBody(sourceLanguage, targetLanguage, headerText);
         createRequest();
-        doReturn("mocked-api-key").when(webCrawler).getApiKey();
+        mockGetAPIKey();
 
         Request actualRequestOutput = webCrawler.createTranslationApiRequest(expectedBody);
 
@@ -415,14 +486,18 @@ class WebsiteCrawlerTest {
     }
 
     private void mockNewClientCall() throws IOException {
-        when(mockClient.newCall(mockRequest)).thenReturn(mockCall);
+        when(mockClient.newCall(any())).thenReturn(mockCall);
         when(mockCall.execute()).thenReturn(mockResponse);
+        webCrawler.setClient(mockClient);
     }
 
-    private void mockResponseExtraction() throws IOException {
-        String responseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n} ok";
+    private void mockGetAPIKey() {
+        doReturn("mocked-api-key").when(webCrawler).getApiKey();
+    }
+
+    private void mockResponseExtraction(String expectedResponseOutput) throws IOException {
         when(mockResponse.body()).thenReturn(mockResponseBody);
-        when(mockResponseBody.string()).thenReturn(responseOutput);
+        when(mockResponseBody.string()).thenReturn(expectedResponseOutput);
     }
 
     private Elements addElements() {
