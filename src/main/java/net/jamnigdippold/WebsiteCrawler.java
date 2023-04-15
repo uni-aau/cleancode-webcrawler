@@ -87,7 +87,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void recursivelyCrawlLinkedWebsites() { //TODO: function both starts new crawlers and prints links, but the printing should happen here to uphold desired output format (Link, Output of Link, Link, Output of Link ...)
+    protected void recursivelyCrawlLinkedWebsites() { //TODO: function both starts new crawlers and prints links, but the printing should happen here to uphold desired output format (Link, Output of Link, Link, Output of Link ...)
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
             boolean isBrokenLink = isBrokenLink(crawledLink);
@@ -228,10 +228,12 @@ public class WebsiteCrawler {
 
         apiResponseBody = apiResponse.body().string();
         node = new ObjectMapper().readTree(apiResponseBody);
-        if (node.get("status").asText().equals("success"))
+
+        if (node.get("status").asText().equals("success")) {
             return node.get("data").get("translatedText").asText();
-        else
+        } else {
             return null;
+        }
     }
 
     protected String extractLanguageCode(Response apiResponse) {
@@ -307,5 +309,13 @@ public class WebsiteCrawler {
 
     public FileWriter getFileWriter() {
         return fileWriter;
+    }
+
+    public void setCrawledLinks(List<String> crawledLinks) {
+        this.crawledLinks = crawledLinks;
+    }
+
+    public String getSourceLanguage() {
+        return sourceLanguage;
     }
 }

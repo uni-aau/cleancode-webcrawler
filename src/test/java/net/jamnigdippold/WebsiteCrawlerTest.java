@@ -40,7 +40,7 @@ class WebsiteCrawlerTest {
     private FormBody expectedBody;
     private Request expectedRequest;
     private static WebsiteCrawler webCrawler;
-    private String testFilePath = "testFile.txt";
+    private final String testFilePath = "testFile.txt";
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     private Elements crawledHeadlines;
 
@@ -92,6 +92,69 @@ class WebsiteCrawlerTest {
         webCrawler.crawlWebsiteLinks();
 
         assertEquals(crawledLinks, webCrawler.getCrawledLinks());
+    }
+
+    @Test
+    void testRecursiveWebsiteCrawlingBrokenLink() throws IOException {
+        String link = "https://looksRealButIsNot";
+        String expectedOutputMessage = "<br>--> broken link <a>" + link + "</a>\n\n";
+        ArrayList<String> crawledLinks = new ArrayList<>();
+        crawledLinks.add(link);
+        mockJsoup();
+
+        webCrawler.setCrawledLinks(crawledLinks);
+        webCrawler.recursivelyCrawlLinkedWebsites();
+
+        assertEquals(expectedOutputMessage, outputStream.toString());
+        assertEqualFileContent(expectedOutputMessage, testFilePath);
+
+        mockedJsoup.close();
+    }
+
+    @Test
+    void testRecursiveWebsiteCrawlingTooHighDepth() throws IOException {
+        String link = "https://example.com";
+        String expectedOutputMessage = "<br>------> link to <a>" + link + "</a>\n\n";
+        ArrayList<String> crawledLinks = new ArrayList<>();
+        crawledLinks.add(link);
+        mockJsoup();
+
+        webCrawler.setCrawledLinks(crawledLinks);
+        webCrawler.setCurrentDepthOfRecursiveSearch(2);
+        webCrawler.recursivelyCrawlLinkedWebsites();
+
+        assertEquals(expectedOutputMessage, outputStream.toString());
+        assertEqualFileContent(expectedOutputMessage, testFilePath);
+        mockedJsoup.close();
+    }
+
+    @Test
+    void testRecursiveWebsiteCrawling() throws IOException {
+        ArrayList<String> crawledLinks = new ArrayList<>();
+        crawledLinks.add("https://example.com");
+        mockJsoup();
+
+        webCrawler.setCrawledLinks(crawledLinks);
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
+        webCrawler.setWebsiteDocumentConnection(mockedDocument);
+
+        // TODO
+
+        mockedJsoup.close();
+    }
+
+    @Test
+    void testSetSourceLanguage() throws IOException {
+        String expectedSourceLanguage = "en";
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
+        crawledHeadlines = addElements();
+        mockResponseExtraction(expectedResponseOutput);
+        doReturn(mockResponse).when(webCrawler).executeAPIRequest("Heading h1");
+
+        webCrawler.setCrawledHeadlineElements(crawledHeadlines);
+        webCrawler.setSourceLanguage();
+
+        assertEquals(expectedSourceLanguage, webCrawler.getSourceLanguage());
     }
 
     @Test
