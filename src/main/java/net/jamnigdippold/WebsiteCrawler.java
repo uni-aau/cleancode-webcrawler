@@ -26,8 +26,21 @@ public class WebsiteCrawler {
     private OkHttpClient client = new OkHttpClient();
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
-            createFileWriter(outputPath);
-            initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0, fileWriter);
+        createFileWriter(outputPath);
+        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0, fileWriter);
+    }
+
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
+        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
+    }
+
+    protected static boolean isBrokenLink(String crawledLink) {
+        try {
+            Jsoup.connect(crawledLink).get();
+            return false;
+        } catch (IOException | IllegalArgumentException exception) {
+            return true;
+        }
     }
 
     protected void createFileWriter(String outputPath) {
@@ -36,10 +49,6 @@ public class WebsiteCrawler {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
-        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
     }
 
     protected void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
@@ -108,15 +117,6 @@ public class WebsiteCrawler {
         if (!relativeUrl.startsWith("http"))
             absoluteUrl = websiteUrl + relativeUrl.substring(1);
         return absoluteUrl;
-    }
-
-    protected static boolean isBrokenLink(String crawledLink) {
-        try {
-            Jsoup.connect(crawledLink).get();
-            return false;
-        } catch (IOException | IllegalArgumentException exception) {
-            return true;
-        }
     }
 
     private void startNewCrawler(String crawledLink) {
@@ -279,6 +279,10 @@ public class WebsiteCrawler {
         return executeTranslationApiRequest(request);
     }
 
+    public void flushWriter() throws IOException {
+        fileWriter.flush();
+    }
+
     public Elements getCrawledHeadlineElements() {
         return crawledHeadlineElements;
     }
@@ -289,6 +293,10 @@ public class WebsiteCrawler {
 
     public List<String> getCrawledLinks() {
         return crawledLinks;
+    }
+
+    public void setCrawledLinks(List<String> crawledLinks) {
+        this.crawledLinks = crawledLinks;
     }
 
     public void setWebsiteDocumentConnection(Document websiteDocumentConnection) {
@@ -303,20 +311,12 @@ public class WebsiteCrawler {
         this.client = client;
     }
 
-    public void flushWriter() throws IOException {
-        fileWriter.flush();
-    }
-
-    public void setFileWriter(FileWriter fileWriter) {
-        this.fileWriter = fileWriter;
-    }
-
     public FileWriter getFileWriter() {
         return fileWriter;
     }
 
-    public void setCrawledLinks(List<String> crawledLinks) {
-        this.crawledLinks = crawledLinks;
+    public void setFileWriter(FileWriter fileWriter) {
+        this.fileWriter = fileWriter;
     }
 
     public String getSourceLanguage() {
