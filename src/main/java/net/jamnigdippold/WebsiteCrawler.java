@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,13 +21,19 @@ public class WebsiteCrawler {
     private Document websiteDocumentConnection;
     private Elements crawledHeadlineElements;
     private List<String> crawledLinks;
-    private final String sourceLanguage = "en"; // Todo Checker für Headersprache
+    private String sourceLanguage;
     private String targetLanguage;
     private FileWriter fileWriter;
+    private OkHttpClient client = new OkHttpClient();
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
+            createFileWriter(outputPath);
+            initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0, fileWriter);
+    }
+
+    protected void createFileWriter(String outputPath) {
         try {
-            initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0, new FileWriter(outputPath));
+            fileWriter = new FileWriter(outputPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -34,28 +41,29 @@ public class WebsiteCrawler {
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
         initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
-
     }
 
-    private void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
+    protected void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
         this.websiteUrl = websiteUrl;
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
         this.targetLanguage = targetLanguage;
+        this.sourceLanguage = "auto";
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
         this.fileWriter = writer;
     }
 
     public void startCrawling() {
-        printInput();
         establishConnection();
         crawlHeadlines();
+        setSourceLanguage();
+        printInput();
         printCrawledHeadlines();
         crawlWebsiteLinks();
         recursivelyCrawlLinkedWebsites();
         closeWriter();
     }
 
-    private void printInput() {
+    protected void printInput() {
         if (currentDepthOfRecursiveSearch == 0) {
             printString("input: <a>" + websiteUrl + "</a>\n");
             printString("<br>depth: " + maxDepthOfRecursiveSearch + "\n");
@@ -65,7 +73,7 @@ public class WebsiteCrawler {
         }
     }
 
-    public void establishConnection() {
+    protected void establishConnection() {
         try {
             websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
         } catch (IOException e) {
@@ -73,11 +81,11 @@ public class WebsiteCrawler {
         }
     }
 
-    public void crawlHeadlines() {
+    protected void crawlHeadlines() {
         crawledHeadlineElements = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
     }
 
-    private void crawlWebsiteLinks() {
+    protected void crawlWebsiteLinks() {
         Elements crawledLinkElements = websiteDocumentConnection.select("a[href]");
         crawledLinks = new ArrayList<>();
         for (Element crawledLinkElement : crawledLinkElements) {
@@ -85,7 +93,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void recursivelyCrawlLinkedWebsites() { //TODO: function both starts new crawlers and prints links, but the printing should happen here to uphold desired output format (Link, Output of Link, Link, Output of Link ...)
+    protected void recursivelyCrawlLinkedWebsites() { //TODO: function both starts new crawlers and prints links, but the printing should happen here to uphold desired output format (Link, Output of Link, Link, Output of Link ...)
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
             boolean isBrokenLink = isBrokenLink(crawledLink);
@@ -96,14 +104,14 @@ public class WebsiteCrawler {
         }
     }
 
-    private String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
+    protected String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
         String absoluteUrl = relativeUrl;
         if (!relativeUrl.startsWith("http"))
             absoluteUrl = websiteUrl + relativeUrl.substring(1);
         return absoluteUrl;
     }
 
-    public static boolean isBrokenLink(String crawledLink) {
+    protected static boolean isBrokenLink(String crawledLink) {
         try {
             Jsoup.connect(crawledLink).get();
             return false;
@@ -119,7 +127,12 @@ public class WebsiteCrawler {
         }
     }
 
-    private void printCrawledHeadlines() {
+    protected void setSourceLanguage() {
+        String headline = crawledHeadlineElements.get(0).text();
+        sourceLanguage = getLanguageCodeFromHeadline(headline);
+    }
+
+    protected void printCrawledHeadlines() {
         for (Element crawledHeadlineElement : crawledHeadlineElements) {
             printHeaderLevel(crawledHeadlineElement);
             if (currentDepthOfRecursiveSearch > 0) {
@@ -130,7 +143,7 @@ public class WebsiteCrawler {
         printString("\n");
     }
 
-    private void printHeaderLevel(Element crawledHeadlineElement) {
+    protected void printHeaderLevel(Element crawledHeadlineElement) {
         int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0';
         for (int i = 0; i < numOfHeader; i++) {
             printString("#");
@@ -138,7 +151,7 @@ public class WebsiteCrawler {
         printString(" ");
     }
 
-    private void printCrawledLink(String crawledLink, boolean isBrokenLink) {
+    protected void printCrawledLink(String crawledLink, boolean isBrokenLink) {
         printString("<br>--");
         printDepthIndicator();
         if (isBrokenLink) printString("broken link <a>");
@@ -147,14 +160,14 @@ public class WebsiteCrawler {
         printString("</a>\n\n");
     }
 
-    private void printDepthIndicator() {
+    protected void printDepthIndicator() {
         for (int i = 0; i < currentDepthOfRecursiveSearch; i++) {
             printString("--");
         }
         printString("> ");
     }
 
-    private void printString(String printable) {
+    protected void printString(String printable) {
         System.out.print(printable);
         try {
             fileWriter.write(printable);
@@ -163,7 +176,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void closeWriter() {
+    protected void closeWriter() {
         try {
             tryCloseWriter();
         } catch (IOException e) {
@@ -171,12 +184,12 @@ public class WebsiteCrawler {
         }
     }
 
-    private void tryCloseWriter() throws IOException {
+    protected void tryCloseWriter() throws IOException {
         if (currentDepthOfRecursiveSearch == 0)
             fileWriter.close();
     }
 
-    private RequestBody createNewRequestBody(String headerText) {
+    protected RequestBody createNewRequestBody(String headerText) {
         return new FormBody.Builder()
                 .add("source_language", sourceLanguage)
                 .add("target_language", targetLanguage)
@@ -184,18 +197,22 @@ public class WebsiteCrawler {
                 .build();
     }
 
-    private Request createTranslationApiRequest(RequestBody body) {
+    protected Request createTranslationApiRequest(RequestBody body) {
+        String apiKey = getApiKey();
         return new Request.Builder()
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
                 .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", "fe74ad9331msh075615faa2bbedap19fc94jsn8e377fd515bc")
+                .addHeader("X-RapidAPI-Key", apiKey)
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
     }
 
-    private Response executeTranslationApiRequest(Request translationApiRequest) {
-        OkHttpClient client = new OkHttpClient();
+    protected String getApiKey() {
+        return System.getenv("RAPIDAPI_API_KEY");
+    }
+
+    protected Response executeTranslationApiRequest(Request translationApiRequest) {
         try {
             return client.newCall(translationApiRequest).execute();
         } catch (IOException e) {
@@ -203,7 +220,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private String extractTranslatedText(Response apiResponse) {
+    protected String extractTranslatedText(Response apiResponse) {
         try {
             return extractTranslation(apiResponse);
         } catch (IOException e) {
@@ -211,29 +228,99 @@ public class WebsiteCrawler {
         }
     }
 
-    private String extractTranslation(Response apiResponse) throws IOException {
+    protected String extractTranslation(Response apiResponse) throws IOException {
         String apiResponseBody;
         JsonNode node;
 
         apiResponseBody = apiResponse.body().string();
         node = new ObjectMapper().readTree(apiResponseBody);
 
-        return node.get("data").get("translatedText").asText();
+        if (node.get("status").asText().equals("success")) {
+            return node.get("data").get("translatedText").asText();
+        } else {
+            return null;
+        }
     }
 
-    private String getTranslatedHeadline(String crawledHeadlineText) {
+    protected String extractLanguageCode(Response apiResponse) {
+        try {
+            return tryToExtractLanguageCode(apiResponse);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    protected String tryToExtractLanguageCode(Response apiResponse) throws IOException {
+        String apiResponseBody;
+        JsonNode node;
+
+        apiResponseBody = apiResponse.body().string();
+        node = new ObjectMapper().readTree(apiResponseBody);
+
+        return node.get("data").get("detectedSourceLanguage").get("code").asText();
+
+    }
+
+    protected String getTranslatedHeadline(String crawledHeadlineText) {
+        Response apiResponse = executeAPIRequest(crawledHeadlineText);
+        String translatedString = extractTranslatedText(apiResponse);
+        if (translatedString == null)
+            translatedString = crawledHeadlineText;
+        return translatedString;
+    }
+
+    protected String getLanguageCodeFromHeadline(String crawledHeadlineText) {
+        Response apiResponse = executeAPIRequest(crawledHeadlineText);
+        return extractLanguageCode(apiResponse);
+    }
+
+    protected Response executeAPIRequest(String crawledHeadlineText) {
         RequestBody body = createNewRequestBody(crawledHeadlineText);
         Request request = createTranslationApiRequest(body);
-        Response apiResponse = executeTranslationApiRequest(request);
-        String translatedString = extractTranslatedText(apiResponse);
-        return translatedString;
+        return executeTranslationApiRequest(request);
     }
 
     public Elements getCrawledHeadlineElements() {
         return crawledHeadlineElements;
     }
 
+    public void setCrawledHeadlineElements(Elements crawledHeadlineElements) {
+        this.crawledHeadlineElements = crawledHeadlineElements;
+    }
+
     public List<String> getCrawledLinks() {
         return crawledLinks;
+    }
+
+    public void setWebsiteDocumentConnection(Document websiteDocumentConnection) {
+        this.websiteDocumentConnection = websiteDocumentConnection;
+    }
+
+    public void setCurrentDepthOfRecursiveSearch(int currentDepthOfRecursiveSearch) {
+        this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
+    }
+
+    public void setClient(OkHttpClient client) {
+        this.client = client;
+    }
+
+    public void flushWriter() throws IOException {
+        fileWriter.flush();
+    }
+
+    public void setFileWriter(FileWriter fileWriter) {
+        this.fileWriter = fileWriter;
+    }
+
+    public FileWriter getFileWriter() {
+        return fileWriter;
+    }
+
+    public void setCrawledLinks(List<String> crawledLinks) {
+        this.crawledLinks = crawledLinks;
+    }
+
+    public String getSourceLanguage() {
+        return sourceLanguage;
     }
 }
