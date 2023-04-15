@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 class WebsiteCrawlerTest {
 
@@ -72,6 +73,11 @@ class WebsiteCrawlerTest {
         webCrawler = null;
         System.setOut(System.out);
         new File(testFilePath).delete();
+    }
+
+    @Test
+    void testCreateFileWriterError() {
+        assertThrows(RuntimeException.class, ()-> webCrawler.createFileWriter(""));
     }
 
     @Test

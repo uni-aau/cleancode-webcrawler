@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,24 +27,28 @@ public class WebsiteCrawler {
     private OkHttpClient client = new OkHttpClient();
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
+            createFileWriter(outputPath);
+            initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0);
+    }
+
+    protected void createFileWriter(String outputPath) {
         try {
-            initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0, new FileWriter(outputPath));
+            fileWriter = new FileWriter(outputPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
-        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
+        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch);
     }
 
-    private void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
+    protected void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch) {
         this.websiteUrl = websiteUrl;
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
         this.targetLanguage = targetLanguage;
         this.sourceLanguage = "auto";
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
-        this.fileWriter = writer;
     }
 
     public void startCrawling() {
