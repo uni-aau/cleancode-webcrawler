@@ -8,7 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ public class WebsiteCrawler {
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
             createFileWriter(outputPath);
-            initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0);
+            initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0, fileWriter);
     }
 
     protected void createFileWriter(String outputPath) {
@@ -40,15 +40,16 @@ public class WebsiteCrawler {
     }
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
-        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch);
+        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
     }
 
-    protected void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch) {
+    protected void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
         this.websiteUrl = websiteUrl;
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
         this.targetLanguage = targetLanguage;
         this.sourceLanguage = "auto";
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
+        this.fileWriter = writer;
     }
 
     public void startCrawling() {
@@ -245,7 +246,7 @@ public class WebsiteCrawler {
         try {
             return tryToExtractLanguageCode(apiResponse);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -276,8 +277,7 @@ public class WebsiteCrawler {
     protected Response executeAPIRequest(String crawledHeadlineText) {
         RequestBody body = createNewRequestBody(crawledHeadlineText);
         Request request = createTranslationApiRequest(body);
-        Response apiResponse = executeTranslationApiRequest(request);
-        return apiResponse;
+        return executeTranslationApiRequest(request);
     }
 
     public Elements getCrawledHeadlineElements() {
