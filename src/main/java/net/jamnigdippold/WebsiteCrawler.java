@@ -300,4 +300,12 @@ public class WebsiteCrawler {
     public void flushWriter() throws IOException {
         fileWriter.flush();
     }
+
+    public void setFileWriter(FileWriter fileWriter) {
+        this.fileWriter = fileWriter;
+    }
+
+    public FileWriter getFileWriter() {
+        return fileWriter;
+    }
 }
