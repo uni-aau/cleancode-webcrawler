@@ -8,6 +8,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -63,33 +65,33 @@ class MainTest {
 
         Main.getUserInput();
 
-        Assertions.assertEquals("https://example.com", Main.websiteUrl);
-        Assertions.assertEquals(3, Main.depthOfRecursiveSearch);
-        Assertions.assertEquals("en", Main.languageCode);
-        Assertions.assertEquals("TestFile.md", Main.outputPath);
+        assertEquals("https://example.com", Main.websiteUrl);
+        assertEquals(3, Main.depthOfRecursiveSearch);
+        assertEquals("en", Main.languageCode);
+        assertEquals("TestFile.md", Main.outputPath);
 
-        Assertions.assertThrows(IllegalStateException.class, () -> Main.inputScanner.next());
+        assertThrows(IllegalStateException.class, () -> Main.inputScanner.next());
     }
 
     @Test
     void testCreateFileChooserParent() {
         if (mockedMain == null)
-            mockedMain = Mockito.mockStatic(Main.class, Mockito.CALLS_REAL_METHODS);
-        JFrame mockedFrame = Mockito.mock(JFrame.class);
+            mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
+        JFrame mockedFrame = mock(JFrame.class);
         mockedMain.when(Main::createJFrame).thenReturn(mockedFrame);
 
         JFrame test = Main.createFileChooserParent();
 
-        Assertions.assertEquals(test, mockedFrame);
-        Mockito.verify(mockedFrame).setLocationRelativeTo(null);
-        Mockito.verify(mockedFrame).setVisible(true);
-        Mockito.verify(mockedFrame).setExtendedState(JFrame.ICONIFIED);
-        Mockito.verify(mockedFrame).setExtendedState(JFrame.NORMAL);
+        assertEquals(test, mockedFrame);
+        verify(mockedFrame).setLocationRelativeTo(null);
+        verify(mockedFrame).setVisible(true);
+        verify(mockedFrame).setExtendedState(JFrame.ICONIFIED);
+        verify(mockedFrame).setExtendedState(JFrame.NORMAL);
     }
 
     @Test
     void testCreateJFrame() {
-        Assertions.assertNotNull(Main.createJFrame());
+        assertNotNull(Main.createJFrame());
     }
 
     @Test
@@ -99,8 +101,8 @@ class MainTest {
         Main.createFileChooser();
         FileFilter filter = Main.fileChooser.getFileFilter();
 
-        Assertions.assertNotNull(Main.fileChooser);
-        Assertions.assertEquals(expectedFilterDescription, filter.getDescription());
+        assertNotNull(Main.fileChooser);
+        assertEquals(expectedFilterDescription, filter.getDescription());
     }
 
     @Test
@@ -110,8 +112,8 @@ class MainTest {
 
         Main.runFileChooser();
 
-        Assertions.assertEquals(0, Main.fileChooserStatus);
-        Mockito.verify(mockedFrame).setVisible(false);
+        assertEquals(0, Main.fileChooserStatus);
+        verify(mockedFrame).setVisible(false);
     }
 
     @Test
@@ -120,8 +122,8 @@ class MainTest {
 
         Main.getOutputFileInput();
 
-        Assertions.assertEquals("Test.txt.md", Main.outputPath);
-        Assertions.assertEquals("Choose a location for the output File" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("Test.txt.md", Main.outputPath);
+        assertEquals("Choose a location for the output File" + System.getProperty("line.separator"), outContent.toString());
     }
 
     @Test
@@ -129,8 +131,8 @@ class MainTest {
         mockJFileChooser(JFileChooser.ERROR_OPTION, "Test");
         mockSystemExit();
 
-        Assertions.assertThrows(RuntimeException.class, Main::getOutputFileInput, "SecurityException: Tried to exit with status -1");
-        Assertions.assertEquals("ERROR: Unexpected error. Stopping program." + System.getProperty("line.separator"), errContent.toString());
+        assertThrows(RuntimeException.class, Main::getOutputFileInput, "SecurityException: Tried to exit with status -1");
+        assertEquals("ERROR: Unexpected error. Stopping program." + System.getProperty("line.separator"), errContent.toString());
     }
 
     @Test
@@ -138,8 +140,8 @@ class MainTest {
         mockJFileChooser(JFileChooser.CANCEL_OPTION, "Test");
         mockSystemExit();
 
-        Assertions.assertThrows(RuntimeException.class, Main::getOutputFileInput, "SecurityException: Tried to exit with status 0");
-        Assertions.assertEquals("ERROR: File choosing aborted. Stopping program." + System.getProperty("line.separator"), errContent.toString());
+        assertThrows(RuntimeException.class, Main::getOutputFileInput, "SecurityException: Tried to exit with status 0");
+        assertEquals("ERROR: File choosing aborted. Stopping program." + System.getProperty("line.separator"), errContent.toString());
     }
 
     private void mockSystemExit() {
@@ -158,13 +160,13 @@ class MainTest {
 
     private void mockJFileChooser(int returnCode, String chosenPath) {
         if (mockedMain == null)
-            mockedMain = Mockito.mockStatic(Main.class, Mockito.CALLS_REAL_METHODS);
-        mockedFrame = Mockito.mock(JFrame.class);
+            mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
+        mockedFrame = mock(JFrame.class);
         mockedMain.when(Main::createJFrame).thenReturn(mockedFrame);
         mockedMain.when(Main::createFileChooser).then(invocationOnMock -> {
-            Main.fileChooser = Mockito.mock(JFileChooser.class);
-            Mockito.when(Main.fileChooser.showSaveDialog(Mockito.any())).thenReturn(returnCode);
-            Mockito.when(Main.fileChooser.getSelectedFile()).thenReturn(new File(chosenPath));
+            Main.fileChooser = mock(JFileChooser.class);
+            when(Main.fileChooser.showSaveDialog(any())).thenReturn(returnCode);
+            when(Main.fileChooser.getSelectedFile()).thenReturn(new File(chosenPath));
             return null;
         });
     }
@@ -175,7 +177,7 @@ class MainTest {
 
         Main.addFileExtension();
 
-        Assertions.assertEquals("E:\\RealFolder\\output.md", Main.outputPath);
+        assertEquals("E:\\RealFolder\\output.md", Main.outputPath);
 
     }
 
@@ -185,7 +187,7 @@ class MainTest {
 
         Main.addFileExtension();
 
-        Assertions.assertEquals("E:\\RealFolder\\output.md", Main.outputPath);
+        assertEquals("E:\\RealFolder\\output.md", Main.outputPath);
     }
 
     @Test
@@ -198,9 +200,9 @@ class MainTest {
     }
 
     private void assertTestGetLanguage() {
-        Assertions.assertEquals("Enter your language code [zB de]" + System.getProperty("line.separator"), outContent.toString());
-        Assertions.assertEquals("", errContent.toString());
-        Assertions.assertEquals("en", Main.languageCode);
+        assertEquals("Enter your language code [zB de]" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("", errContent.toString());
+        assertEquals("en", Main.languageCode);
     }
 
     @Test
@@ -213,9 +215,9 @@ class MainTest {
     }
 
     private void assertTestGetLanguageError() {
-        Assertions.assertEquals("Enter your language code [zB de]" + System.getProperty("line.separator"), outContent.toString());
-        Assertions.assertEquals("ERROR: Please enter a valid language code." + System.getProperty("line.separator") + "ERROR: Please enter a valid language code." + System.getProperty("line.separator"), errContent.toString());
-        Assertions.assertEquals("en", Main.languageCode);
+        assertEquals("Enter your language code [zB de]" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("ERROR: Please enter a valid language code." + System.getProperty("line.separator") + "ERROR: Please enter a valid language code." + System.getProperty("line.separator"), errContent.toString());
+        assertEquals("en", Main.languageCode);
     }
 
     @Test
@@ -228,9 +230,9 @@ class MainTest {
     }
 
     private void assertTestGetDepthInput() {
-        Assertions.assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
-        Assertions.assertEquals("", errContent.toString());
-        Assertions.assertEquals(3, Main.depthOfRecursiveSearch);
+        assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("", errContent.toString());
+        assertEquals(3, Main.depthOfRecursiveSearch);
     }
 
     @Test
@@ -243,12 +245,12 @@ class MainTest {
     }
 
     private void assertTestGetDepthInputError() {
-        Assertions.assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
-        Assertions.assertEquals("ERROR: Please enter a valid number." + System.getProperty("line.separator")
+        assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("ERROR: Please enter a valid number." + System.getProperty("line.separator")
                 + "ERROR: Please enter a positive number." + System.getProperty("line.separator")
                 + "ERROR: Please enter a positive number." + System.getProperty("line.separator")
                 + "ERROR: Please enter a positive number." + System.getProperty("line.separator"), errContent.toString());
-        Assertions.assertEquals(0, Main.depthOfRecursiveSearch);
+        assertEquals(0, Main.depthOfRecursiveSearch);
     }
 
     @Test
@@ -261,9 +263,9 @@ class MainTest {
     }
 
     private void assertTestGetWebsiteInput() {
-        Assertions.assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
-        Assertions.assertEquals("", errContent.toString());
-        Assertions.assertEquals("https://example.com", Main.websiteUrl);
+        assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("", errContent.toString());
+        assertEquals("https://example.com", Main.websiteUrl);
         mockedCrawler.verify(() -> WebsiteCrawler.isBrokenLink("https://example.com"));
     }
 
@@ -277,9 +279,9 @@ class MainTest {
     }
 
     private void assertTestGetWebsiteInputError() {
-        Assertions.assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
-        Assertions.assertEquals("ERROR: Cannot connect to url, please enter a valid url" + System.getProperty("line.separator") + "ERROR: Cannot connect to url, please enter a valid url" + System.getProperty("line.separator"), errContent.toString());
-        Assertions.assertEquals("https://example.com", Main.websiteUrl);
+        assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("ERROR: Cannot connect to url, please enter a valid url" + System.getProperty("line.separator") + "ERROR: Cannot connect to url, please enter a valid url" + System.getProperty("line.separator"), errContent.toString());
+        assertEquals("https://example.com", Main.websiteUrl);
     }
 
     private void setUpTestGetWebsiteInput(String testInput) {
@@ -293,7 +295,7 @@ class MainTest {
 
     private void mockSetupScanner(String testInput) {
         if (mockedMain == null)
-            mockedMain = Mockito.mockStatic(Main.class, Mockito.CALLS_REAL_METHODS);
+            mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
         mockedMain.when(Main::setupScanner).then(invocationOnMock -> {
             mockInputScanner(testInput);
             return null;
@@ -301,8 +303,8 @@ class MainTest {
     }
 
     private void mockIsBrokenLink() {
-        mockedCrawler = Mockito.mockStatic(WebsiteCrawler.class);
-        mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink(Mockito.anyString())).thenReturn(true);
+        mockedCrawler = mockStatic(WebsiteCrawler.class);
+        mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink(anyString())).thenReturn(true);
         mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink("https://example.com")).thenReturn(false);
         mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink("wrong URL format")).thenReturn(true);
         mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink("https://www.notARealWebsite.com")).thenReturn(true);
