@@ -85,6 +85,7 @@ class MainTest {
         JFrame test = Main.createFileChooserParent();
 
         assertEquals(test, mockedFrame);
+
         verify(mockedFrame).setLocationRelativeTo(null);
         verify(mockedFrame).setVisible(true);
         verify(mockedFrame).setExtendedState(JFrame.ICONIFIED);
@@ -110,8 +111,8 @@ class MainTest {
     @Test
     void testRunFileChooser() {
         mockJFileChooser(0, "Test.md");
-        Main.createFileChooser();
 
+        Main.createFileChooser();
         Main.runFileChooser();
 
         assertEquals(0, Main.fileChooserStatus);

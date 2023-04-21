@@ -18,7 +18,6 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -29,6 +28,7 @@ class WebsiteCrawlerTest {
     private static WebsiteCrawler webCrawler;
     private final String testFilePath = "testFile.txt";
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    private ArrayList<String> crawledLinks = new ArrayList<>();
     private FormBody expectedBody;
     private Request expectedRequest;
     private Elements crawledHeadlines;
@@ -90,7 +90,6 @@ class WebsiteCrawlerTest {
 
     @Test
     void testWebsiteLinksCrawlingOutput() {
-        List<String> crawledLinks = new ArrayList<>();
         crawledLinks.add("http://example.com");
         crawledLinks.add("./relativeUrl");
 
@@ -102,9 +101,8 @@ class WebsiteCrawlerTest {
     @Test
     void testRecursiveWebsiteCrawlingBrokenLink() throws IOException {
         String link = "https://looksRealButIsNot";
-        String expectedOutputMessage = "<br>--> broken link <a>" + link + "</a>\n\n";
-        ArrayList<String> crawledLinks = new ArrayList<>();
         crawledLinks.add(link);
+        String expectedOutputMessage = "<br>--> broken link <a>" + link + "</a>\n\n";
         mockJsoup();
 
         webCrawler.setCrawledLinks(crawledLinks);
@@ -119,9 +117,8 @@ class WebsiteCrawlerTest {
     @Test
     void testRecursiveWebsiteCrawlingTooHighDepth() throws IOException {
         String link = "https://example.com";
-        String expectedOutputMessage = "<br>------> link to <a>" + link + "</a>\n\n";
-        ArrayList<String> crawledLinks = new ArrayList<>();
         crawledLinks.add(link);
+        String expectedOutputMessage = "<br>------> link to <a>" + link + "</a>\n\n";
         mockJsoup();
 
         webCrawler.setCrawledLinks(crawledLinks);
@@ -130,6 +127,7 @@ class WebsiteCrawlerTest {
 
         assertEquals(expectedOutputMessage, outputStream.toString());
         assertEqualFileContent(expectedOutputMessage, testFilePath);
+
         mockedJsoup.close();
     }
 
@@ -203,9 +201,7 @@ class WebsiteCrawlerTest {
 
     @Test
     void testPrintCrawledHeadlinesZeroDepth() throws IOException {
-        String expectedHeaderLevel = "# ";
-        String expectedHeadlineTranslation = "Überschrift h1";
-        String expectedPrintMessage = expectedHeaderLevel + expectedHeadlineTranslation + "\n\n";
+        String expectedPrintMessage = "# Überschrift h1\n\n";
         mockHeadingTranslation();
 
         crawledHeadlines = addElements();
@@ -218,10 +214,7 @@ class WebsiteCrawlerTest {
 
     @Test
     void testPrintCrawledHeadlinesOneDepth() throws IOException {
-        String expectedHeaderLevel = "# ";
-        String expectedDepthLevel = "--> ";
-        String expectedHeadlineTranslation = "Überschrift h1";
-        String expectedPrintMessage = expectedHeaderLevel + expectedDepthLevel + expectedHeadlineTranslation + "\n\n";
+        String expectedPrintMessage = "# --> Überschrift h1\n\n";
         mockHeadingTranslation();
 
         crawledHeadlines = addElements();
@@ -289,9 +282,9 @@ class WebsiteCrawlerTest {
     @Test
     void testGetSystemEnv() {
         String expectedKey = System.getenv("RAPIDAPI_API_KEY");
-        String returnedKey = webCrawler.getApiKey();
+        String actualKey = webCrawler.getApiKey();
 
-        assertEquals(expectedKey, returnedKey);
+        assertEquals(expectedKey, actualKey);
     }
 
     @Test
@@ -417,7 +410,6 @@ class WebsiteCrawlerTest {
         assertEquals(expectedBody.contentLength(), actualBody.contentLength());
     }
 
-    // Todo verbessern?
     @Test
     void testTranslationRequestExecution() throws IOException {
         mockNewClientCall();
@@ -435,8 +427,8 @@ class WebsiteCrawlerTest {
 
     @Test
     void testTranslationExtraction() throws IOException {
-        String expectedReturnValue = "Ueberschrift h1";
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
+        String expectedReturnValue = "Überschrift h1";
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Überschrift h1\"\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
 
         String actualReturnValue = webCrawler.extractTranslatedText(mockedResponse);
@@ -489,6 +481,7 @@ class WebsiteCrawlerTest {
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
         doReturn(mockedResponse).when(webCrawler).executeAPIRequest("Heading h1");
+
         String actualTranslatedHeadline = webCrawler.getTranslatedHeadline("Heading h1");
 
         assertEquals(expectedTranslatedHeadline, actualTranslatedHeadline);
@@ -500,6 +493,7 @@ class WebsiteCrawlerTest {
         String expectedResponseOutput = "{\n\"status\": \"error\",\n\"message\": \"source language cannot be the same as target language\"\n}";
         mockResponseExtraction(expectedResponseOutput);
         doReturn(mockedResponse).when(webCrawler).executeAPIRequest("Heading h1");
+
         String actualTranslatedHeadline = webCrawler.getTranslatedHeadline("Heading h1");
 
         assertEquals(expectedTranslatedHeadline, actualTranslatedHeadline);
@@ -511,6 +505,7 @@ class WebsiteCrawlerTest {
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
         doReturn(mockedResponse).when(webCrawler).executeAPIRequest("Heading h1");
+
         String actualLanguageCode = webCrawler.getLanguageCodeFromHeadline("Heading h1");
 
         assertEquals(expectedLanguageCode, actualLanguageCode);
@@ -522,7 +517,9 @@ class WebsiteCrawlerTest {
         mockGetAPIKey();
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
+
         Response actualResponse = webCrawler.executeAPIRequest("Heading h1");
+
         assertEquals(mockedResponse.body().string(), actualResponse.body().string());
     }
 
@@ -580,12 +577,14 @@ class WebsiteCrawlerTest {
         Elements headlineElements = new Elements();
         Element headline = new Element("h1").text("Heading h1");
         headlineElements.add(headline);
+
         return headlineElements;
     }
 
-    private void assertEqualFileContent(String expected, String path) throws IOException {
+    private void assertEqualFileContent(String expectedValue, String path) throws IOException {
         webCrawler.flushWriter();
         String content = new String(Files.readAllBytes(Paths.get(path)));
-        assertEquals(expected, content);
+
+        assertEquals(expectedValue, content);
     }
 }

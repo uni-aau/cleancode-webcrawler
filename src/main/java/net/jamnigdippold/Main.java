@@ -48,14 +48,12 @@ public class Main {
     }
 
     public static void getDepthInput() {
+        boolean value = true;
         System.out.println("Enter the depth of search (how many additional Links should be analyzed)");
-        while (true) {
+
+        while (value) {
             try {
-                depthOfRecursiveSearch = inputScanner.nextInt();
-                if (depthOfRecursiveSearch < 0)
-                    System.err.println("ERROR: Please enter a positive number.");
-                else
-                    break;
+                value = tryToGetDepthInput();
             } catch (InputMismatchException e) {
                 System.err.println("ERROR: Please enter a valid number.");
                 inputScanner.nextLine();
@@ -64,9 +62,20 @@ public class Main {
         inputScanner.nextLine();
     }
 
+    private static boolean tryToGetDepthInput() {
+        depthOfRecursiveSearch = inputScanner.nextInt();
+        if (depthOfRecursiveSearch < 0) {
+            System.err.println("ERROR: Please enter a positive number.");
+        } else {
+            return false;
+        }
+        return true;
+    }
+
     public static void getLanguageInput() {
         System.out.println("Enter your language code [zB de]");
         languageCode = inputScanner.nextLine();
+
         while (!isValidLanguageCode(languageCode)) {
             System.err.println("ERROR: Please enter a valid language code.");
             languageCode = inputScanner.nextLine();
@@ -75,6 +84,7 @@ public class Main {
 
     private static boolean isValidLanguageCode(String code) {
         List<String> validLanguageCodes = Arrays.asList(Locale.getISOLanguages());
+
         return validLanguageCodes.contains(code);
     }
 
@@ -96,12 +106,13 @@ public class Main {
     }
 
     public static JFrame createFileChooserParent() {
-        JFrame jFrame = createJFrame();
-        jFrame.setLocationRelativeTo(null);
-        jFrame.setVisible(true);
-        jFrame.setExtendedState(JFrame.ICONIFIED);
-        jFrame.setExtendedState(JFrame.NORMAL);
-        return jFrame;
+        JFrame frame = createJFrame();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        frame.setExtendedState(JFrame.ICONIFIED);
+        frame.setExtendedState(JFrame.NORMAL);
+
+        return frame;
     }
 
     public static void createFileChooser() {

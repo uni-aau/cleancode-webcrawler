@@ -101,7 +101,10 @@ public class WebsiteCrawler {
         }
     }
 
-    protected void recursivelyCrawlLinkedWebsites() { //TODO: function both starts new crawlers and prints links, but the printing should happen here to uphold desired output format (Link, Output of Link, Link, Output of Link ...)
+
+    // Hint: To uphold desired output format,
+    // start new crawler & print links should happen here
+    protected void recursivelyCrawlLinkedWebsites() {
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
             boolean isBrokenLink = isBrokenLink(crawledLink);
@@ -116,6 +119,7 @@ public class WebsiteCrawler {
         String absoluteUrl = relativeUrl;
         if (!relativeUrl.startsWith("http"))
             absoluteUrl = websiteUrl + relativeUrl.substring(1);
+
         return absoluteUrl;
     }
 
@@ -143,7 +147,7 @@ public class WebsiteCrawler {
     }
 
     protected void printHeaderLevel(Element crawledHeadlineElement) {
-        int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0';
+        int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0'; // Todo description comment?
         for (int i = 0; i < numOfHeader; i++) {
             printString("#");
         }
@@ -234,11 +238,15 @@ public class WebsiteCrawler {
         apiResponseBody = apiResponse.body().string();
         node = new ObjectMapper().readTree(apiResponseBody);
 
-        if (node.get("status").asText().equals("success")) {
+        if (checkNodeSuccessStatus(node)) {
             return node.get("data").get("translatedText").asText();
         } else {
             return null;
         }
+    }
+
+    private boolean checkNodeSuccessStatus(JsonNode node) {
+        return node.get("status").asText().equals("success");
     }
 
     protected String extractLanguageCode(Response apiResponse) {
@@ -265,17 +273,20 @@ public class WebsiteCrawler {
         String translatedString = extractTranslatedText(apiResponse);
         if (translatedString == null)
             translatedString = crawledHeadlineText;
+
         return translatedString;
     }
 
     protected String getLanguageCodeFromHeadline(String crawledHeadlineText) {
         Response apiResponse = executeAPIRequest(crawledHeadlineText);
+
         return extractLanguageCode(apiResponse);
     }
 
     protected Response executeAPIRequest(String crawledHeadlineText) {
         RequestBody body = createNewRequestBody(crawledHeadlineText);
         Request request = createTranslationApiRequest(body);
+
         return executeTranslationApiRequest(request);
     }
 
