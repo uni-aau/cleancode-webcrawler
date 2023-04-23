@@ -15,9 +15,13 @@ public class Main {
 
     public static void main(String[] args) {
         getUserInput();
-        WebsiteCrawler crawler = new WebsiteCrawler(websiteUrl, depthOfRecursiveSearch, languageCode, outputPath);
+        WebsiteCrawler crawler = createCrawler();
         crawler.startCrawling();
         System.exit(0);
+    }
+
+    public static WebsiteCrawler createCrawler() {
+        return new WebsiteCrawler(websiteUrl, depthOfRecursiveSearch, languageCode, outputPath);
     }
 
     private static void closeScanner() {

@@ -3,9 +3,7 @@ package net.jamnigdippold;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -60,6 +58,21 @@ class MainTest {
     }
 
     @Test
+    void testMain() {
+        mockedMain = Mockito.mockStatic(Main.class);
+        mockedMain.when(() -> Main.main(new String[0])).thenCallRealMethod();
+        WebsiteCrawler crawler = mock(WebsiteCrawler.class);
+        mockedMain.when(Main::createCrawler).thenReturn(crawler);
+        mockSystemExit();
+
+        assertThrows(RuntimeException.class, () -> Main.main(new String[0]), "SecurityException: Tried to exit with status 0");
+
+        verify(crawler).startCrawling();
+        mockedMain.verify(Main::createCrawler);
+        mockedMain.verify(Main::getUserInput);
+    }
+
+    @Test
     void testGetUserInput() {
         mockJFileChooser(0, "TestFile");
         mockSetupScanner("https://example.com\n3\nen\n");
@@ -77,9 +90,8 @@ class MainTest {
 
     @Test
     void testCreateFileChooserParent() {
-        if (mockedMain == null)
-            mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
-        JFrame mockedFrame = mock(JFrame.class);
+        setupMockedMain();
+        mockedFrame = mock(JFrame.class);
         mockedMain.when(Main::createJFrame).thenReturn(mockedFrame);
 
         JFrame test = Main.createFileChooserParent();
@@ -162,8 +174,7 @@ class MainTest {
     }
 
     private void mockJFileChooser(int returnCode, String chosenPath) {
-        if (mockedMain == null)
-            mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
+        setupMockedMain();
         mockedFrame = mock(JFrame.class);
         mockedMain.when(Main::createJFrame).thenReturn(mockedFrame);
         mockedMain.when(Main::createFileChooser).then(invocationOnMock -> {
@@ -296,9 +307,13 @@ class MainTest {
         Main.inputScanner = new Scanner(new ByteArrayInputStream(testInput.getBytes()));
     }
 
-    private void mockSetupScanner(String testInput) {
+    private void setupMockedMain() {
         if (mockedMain == null)
             mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
+    }
+
+    private void mockSetupScanner(String testInput) {
+        setupMockedMain();
         mockedMain.when(Main::setupScanner).then(invocationOnMock -> {
             mockInputScanner(testInput);
             return null;
