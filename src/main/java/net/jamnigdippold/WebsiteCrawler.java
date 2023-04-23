@@ -67,7 +67,7 @@ public class WebsiteCrawler {
         printInput();
         printCrawledHeadlines();
         crawlWebsiteLinks();
-        recursivelyCrawlLinkedWebsites();
+        recursivelyPrintCrawledWebsites();
         closeWriter();
     }
 
@@ -104,7 +104,7 @@ public class WebsiteCrawler {
 
     // Hint: To uphold desired output format,
     // start new crawler & print links should happen here
-    protected void recursivelyCrawlLinkedWebsites() {
+    protected void recursivelyPrintCrawledWebsites() {
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
             boolean isBrokenLink = isBrokenLink(crawledLink);
@@ -150,11 +150,17 @@ public class WebsiteCrawler {
     }
 
     protected void printHeaderLevel(Element crawledHeadlineElement) {
-        int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0'; // Todo description comment?
+        int numOfHeader = getHeaderLevelFromName(crawledHeadlineElement.normalName());
         for (int i = 0; i < numOfHeader; i++) {
             printString("#");
         }
         printString(" ");
+    }
+
+    protected int getHeaderLevelFromName(String headerLevelName) {
+        //expected headerLevelNames follow the format "h1", "h2", ... , "h6"
+        String headerNumber = headerLevelName.substring(1);
+        return Integer.parseInt(headerNumber);
     }
 
     protected void printCrawledLink(String crawledLink, boolean isBrokenLink) {
@@ -237,5 +243,25 @@ public class WebsiteCrawler {
 
     public String getSourceLanguage() {
         return sourceLanguage;
+    }
+
+    public void setMaxDepthOfRecursiveSearch(int maxDepthOfRecursiveSearch) {
+        this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
+    }
+
+    public String getWebsiteUrl() {
+        return websiteUrl;
+    }
+
+    public int getMaxDepthOfRecursiveSearch() {
+        return maxDepthOfRecursiveSearch;
+    }
+
+    public int getCurrentDepthOfRecursiveSearch() {
+        return currentDepthOfRecursiveSearch;
+    }
+
+    public String getTargetLanguage() {
+        return targetLanguage;
     }
 }

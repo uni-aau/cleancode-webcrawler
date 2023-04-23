@@ -3,9 +3,7 @@ package net.jamnigdippold;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -39,10 +37,22 @@ class MainTest {
 
     @AfterEach
     public void tearDown() {
+        resetSystemValues();
+        closeMocks();
+        resetMainField();
+    }
+
+    private void resetSystemValues() {
         System.setOut(defaultOut);
         System.setErr(defaultErr);
         System.setSecurityManager(null);
-        closeMocks();
+    }
+
+    private void resetMainField() {
+        Main.websiteUrl = null;
+        Main.depthOfRecursiveSearch = -1;
+        Main.languageCode = null;
+        Main.outputPath = null;
     }
 
     private void closeMocks() {
@@ -57,6 +67,24 @@ class MainTest {
         if (mockedFrame != null) {
             mockedFrame = null;
         }
+    }
+
+    @Test
+    void testMain() {
+        mockedMain = Mockito.mockStatic(Main.class);
+        mockedMain.when(() -> Main.main(new String[0])).thenCallRealMethod();
+        mockedMain.when(Main::createCrawler).thenCallRealMethod();
+        MockedConstruction<WebsiteCrawler> mockedConstruction = mockConstruction(WebsiteCrawler.class, (websiteCrawler, context) -> {
+            doCallRealMethod().when(websiteCrawler).startCrawling();
+        });
+        mockSystemExit();
+
+        assertThrows(RuntimeException.class, () -> Main.main(new String[0]), "SecurityException: Tried to exit with status 0");
+
+        verify(mockedConstruction.constructed().get(0)).startCrawling();
+        mockedMain.verify(Main::getUserInput);
+
+        mockedConstruction.close();
     }
 
     @Test
@@ -77,9 +105,8 @@ class MainTest {
 
     @Test
     void testCreateFileChooserParent() {
-        if (mockedMain == null)
-            mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
-        JFrame mockedFrame = mock(JFrame.class);
+        setupMockedMain();
+        mockedFrame = mock(JFrame.class);
         mockedMain.when(Main::createJFrame).thenReturn(mockedFrame);
 
         JFrame test = Main.createFileChooserParent();
@@ -162,8 +189,7 @@ class MainTest {
     }
 
     private void mockJFileChooser(int returnCode, String chosenPath) {
-        if (mockedMain == null)
-            mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
+        setupMockedMain();
         mockedFrame = mock(JFrame.class);
         mockedMain.when(Main::createJFrame).thenReturn(mockedFrame);
         mockedMain.when(Main::createFileChooser).then(invocationOnMock -> {
@@ -296,9 +322,13 @@ class MainTest {
         Main.inputScanner = new Scanner(new ByteArrayInputStream(testInput.getBytes()));
     }
 
-    private void mockSetupScanner(String testInput) {
+    private void setupMockedMain() {
         if (mockedMain == null)
             mockedMain = mockStatic(Main.class, CALLS_REAL_METHODS);
+    }
+
+    private void mockSetupScanner(String testInput) {
+        setupMockedMain();
         mockedMain.when(Main::setupScanner).then(invocationOnMock -> {
             mockInputScanner(testInput);
             return null;
