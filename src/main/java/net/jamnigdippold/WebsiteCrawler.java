@@ -67,7 +67,7 @@ public class WebsiteCrawler {
         printInput();
         printCrawledHeadlines();
         crawlWebsiteLinks();
-        recursivelyCrawlLinkedWebsites();
+        printRecursivelyCrawledWebsites();
         closeWriter();
     }
 
@@ -104,7 +104,7 @@ public class WebsiteCrawler {
 
     // Hint: To uphold desired output format,
     // start new crawler & print links should happen here
-    protected void recursivelyCrawlLinkedWebsites() {
+    protected void printRecursivelyCrawledWebsites() {
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
             boolean isBrokenLink = isBrokenLink(crawledLink);
@@ -147,11 +147,18 @@ public class WebsiteCrawler {
     }
 
     protected void printHeaderLevel(Element crawledHeadlineElement) {
-        int numOfHeader = (crawledHeadlineElement.normalName().charAt(1)) - '0'; // Todo description comment?
+        int numOfHeader = getHeaderLevelFromName(crawledHeadlineElement.normalName());
         for (int i = 0; i < numOfHeader; i++) {
             printString("#");
         }
         printString(" ");
+    }
+
+    protected int getHeaderLevelFromName(String headerLevelName) {
+        //expected headerLevelNames follow the format "h1", "h2", ... , "h6"
+        char headerNumber = headerLevelName.charAt(1);
+        int headerLevel = Integer.parseInt(headerNumber + "");
+        return headerLevel;
     }
 
     protected void printCrawledLink(String crawledLink, boolean isBrokenLink) {

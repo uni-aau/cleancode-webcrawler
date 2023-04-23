@@ -106,7 +106,7 @@ class WebsiteCrawlerTest {
         mockJsoup();
 
         webCrawler.setCrawledLinks(crawledLinks);
-        webCrawler.recursivelyCrawlLinkedWebsites();
+        webCrawler.printRecursivelyCrawledWebsites();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
         assertEqualFileContent(expectedOutputMessage, testFilePath);
@@ -123,7 +123,7 @@ class WebsiteCrawlerTest {
 
         webCrawler.setCrawledLinks(crawledLinks);
         webCrawler.setCurrentDepthOfRecursiveSearch(2);
-        webCrawler.recursivelyCrawlLinkedWebsites();
+        webCrawler.printRecursivelyCrawledWebsites();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
         assertEqualFileContent(expectedOutputMessage, testFilePath);
