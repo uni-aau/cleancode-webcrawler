@@ -73,15 +73,18 @@ class MainTest {
     void testMain() {
         mockedMain = Mockito.mockStatic(Main.class);
         mockedMain.when(() -> Main.main(new String[0])).thenCallRealMethod();
-        WebsiteCrawler crawler = mock(WebsiteCrawler.class);
-        mockedMain.when(Main::createCrawler).thenReturn(crawler);
+        mockedMain.when(Main::createCrawler).thenCallRealMethod();
+        MockedConstruction<WebsiteCrawler> mockedConstruction = mockConstruction(WebsiteCrawler.class, (websiteCrawler, context) -> {
+            doCallRealMethod().when(websiteCrawler).startCrawling();
+        });
         mockSystemExit();
 
         assertThrows(RuntimeException.class, () -> Main.main(new String[0]), "SecurityException: Tried to exit with status 0");
 
-        verify(crawler).startCrawling();
-        mockedMain.verify(Main::createCrawler);
+        verify(mockedConstruction.constructed().get(0)).startCrawling();
         mockedMain.verify(Main::getUserInput);
+
+        mockedConstruction.close();
     }
 
     @Test
