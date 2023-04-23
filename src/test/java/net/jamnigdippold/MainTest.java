@@ -37,10 +37,22 @@ class MainTest {
 
     @AfterEach
     public void tearDown() {
+        resetSystemValues();
+        closeMocks();
+        resetMainField();
+    }
+
+    private void resetSystemValues() {
         System.setOut(defaultOut);
         System.setErr(defaultErr);
         System.setSecurityManager(null);
-        closeMocks();
+    }
+
+    private void resetMainField() {
+        Main.websiteUrl = null;
+        Main.depthOfRecursiveSearch = -1;
+        Main.languageCode = null;
+        Main.outputPath = null;
     }
 
     private void closeMocks() {

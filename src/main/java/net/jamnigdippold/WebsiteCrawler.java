@@ -156,8 +156,8 @@ public class WebsiteCrawler {
 
     protected int getHeaderLevelFromName(String headerLevelName) {
         //expected headerLevelNames follow the format "h1", "h2", ... , "h6"
-        char headerNumber = headerLevelName.charAt(1);
-        int headerLevel = Integer.parseInt(headerNumber + "");
+        String headerNumber = headerLevelName.substring(1);
+        int headerLevel = Integer.parseInt(headerNumber);
         return headerLevel;
     }
 
