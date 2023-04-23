@@ -343,4 +343,20 @@ public class WebsiteCrawler {
     public void setMaxDepthOfRecursiveSearch(int maxDepthOfRecursiveSearch) {
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
     }
+
+    public String getWebsiteUrl() {
+        return websiteUrl;
+    }
+
+    public int getMaxDepthOfRecursiveSearch() {
+        return maxDepthOfRecursiveSearch;
+    }
+
+    public int getCurrentDepthOfRecursiveSearch() {
+        return currentDepthOfRecursiveSearch;
+    }
+
+    public String getTargetLanguage() {
+        return targetLanguage;
+    }
 }

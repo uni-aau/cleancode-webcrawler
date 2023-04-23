@@ -102,6 +102,39 @@ class WebsiteCrawlerTest {
     }
 
     @Test
+    void testRecursiveConstructor() {
+        String url = "http://example.com";
+        int maxDepthOfRecursiveSearch = 3;
+        String targetLanguage = "en";
+        int currentDepthOfRecursiveSearch = 1;
+        FileWriter writer = mock(FileWriter.class);
+
+        WebsiteCrawler newCrawler = new WebsiteCrawler(url, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
+
+        assertEquals(url, newCrawler.getWebsiteUrl());
+        assertEquals(maxDepthOfRecursiveSearch, newCrawler.getMaxDepthOfRecursiveSearch());
+        assertEquals(targetLanguage, newCrawler.getTargetLanguage());
+        assertEquals(currentDepthOfRecursiveSearch, newCrawler.getCurrentDepthOfRecursiveSearch());
+    }
+
+    @Test
+    void testStartCrawling(){
+        webCrawler = mock(WebsiteCrawler.class);
+        doCallRealMethod().when(webCrawler).startCrawling();
+
+        webCrawler.startCrawling();
+
+        verify(webCrawler).establishConnection();
+        verify(webCrawler).crawlHeadlines();
+        verify(webCrawler).setSourceLanguage();
+        verify(webCrawler).printInput();
+        verify(webCrawler).printCrawledHeadlines();
+        verify(webCrawler).crawlWebsiteLinks();
+        verify(webCrawler).recursivelyPrintCrawledWebsites();
+        verify(webCrawler).closeWriter();
+    }
+
+    @Test
     void testRecursiveWebsiteCrawlingBrokenLink() throws IOException {
         String link = "https://looksRealButIsNot";
         crawledLinks.add(link);
