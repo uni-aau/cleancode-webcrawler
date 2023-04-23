@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
@@ -43,8 +44,10 @@ class WebsiteCrawlerTest {
     @Mock
     Call mockedCall;
     MockedStatic<Jsoup> mockedJsoup;
+    MockedConstruction<WebsiteCrawler> mockedCrawlerConstruction;
 
     @BeforeEach
+
     public void setUp() {
         mockEstablishConnection();
         webCrawler.establishConnection();
@@ -106,7 +109,7 @@ class WebsiteCrawlerTest {
         mockJsoup();
 
         webCrawler.setCrawledLinks(crawledLinks);
-        webCrawler.printRecursivelyCrawledWebsites();
+        webCrawler.recursivelyPrintCrawledWebsites();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
         assertEqualFileContent(expectedOutputMessage, testFilePath);
@@ -123,7 +126,7 @@ class WebsiteCrawlerTest {
 
         webCrawler.setCrawledLinks(crawledLinks);
         webCrawler.setCurrentDepthOfRecursiveSearch(2);
-        webCrawler.printRecursivelyCrawledWebsites();
+        webCrawler.recursivelyPrintCrawledWebsites();
 
         assertEquals(expectedOutputMessage, outputStream.toString());
         assertEqualFileContent(expectedOutputMessage, testFilePath);
@@ -131,19 +134,58 @@ class WebsiteCrawlerTest {
         mockedJsoup.close();
     }
 
-    //    @Test
-    void testRecursiveWebsiteCrawling() throws IOException {
+    @Test
+    void testRecursiveWebsiteCrawlingAtHigherDepth() throws IOException {
+        mockJsoup();
+        mockCrawlerCreation();
         ArrayList<String> crawledLinks = new ArrayList<>();
         crawledLinks.add("https://example.com");
-        mockJsoup();
-
         webCrawler.setCrawledLinks(crawledLinks);
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
-        webCrawler.setWebsiteDocumentConnection(mockedDocument);
+        webCrawler.setMaxDepthOfRecursiveSearch(2);
 
-        // TODO
+        webCrawler.recursivelyPrintCrawledWebsites();
+
+        assertEquals("<br>--> link to <a>https://example.com</a>\n" +
+                "\n" +
+                "<br>----> link to <a>https://example.com</a>\n" +
+                "\n" +
+                "<br>------> link to <a>https://example.com</a>\n" +
+                "\n", outputStream.toString());
 
         mockedJsoup.close();
+        mockedCrawlerConstruction.close();
+    }
+
+    void mockCrawlerCreation() {
+        mockedCrawlerConstruction = mockConstruction(WebsiteCrawler.class,
+                (mock, context) -> {
+                    setMockedMethodeToCallRealMethods(mock);
+
+                    doAnswer(invocationOnMock -> {
+                        System.out.print((String) invocationOnMock.getArgument(0));
+                        return null;
+                    }).when(mock).printString(anyString());
+
+                    doAnswer(invocationOnMock -> {
+                        ArrayList<String> crawledLinks = new ArrayList<>();
+                        crawledLinks.add("https://example.com");
+                        mock.setCrawledLinks(crawledLinks);
+                        mock.setMaxDepthOfRecursiveSearch((int) context.arguments().get(1));
+                        mock.setCurrentDepthOfRecursiveSearch((int) context.arguments().get(3));
+                        mock.recursivelyPrintCrawledWebsites();
+                        return null;
+                    }).when(mock).startCrawling();
+                });
+    }
+
+    void setMockedMethodeToCallRealMethods(WebsiteCrawler mock) {
+        doCallRealMethod().when(mock).setCrawledLinks(any());
+        doCallRealMethod().when(mock).setCurrentDepthOfRecursiveSearch(anyInt());
+        doCallRealMethod().when(mock).setMaxDepthOfRecursiveSearch(anyInt());
+        doCallRealMethod().when(mock).convertRelativeUrlToAbsoluteURL(anyString());
+        doCallRealMethod().when(mock).printCrawledLink(anyString(), anyBoolean());
+        doCallRealMethod().when(mock).printDepthIndicator();
+        doCallRealMethod().when(mock).recursivelyPrintCrawledWebsites();
     }
 
     @Test

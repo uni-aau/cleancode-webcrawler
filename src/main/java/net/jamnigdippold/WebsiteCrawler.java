@@ -67,7 +67,7 @@ public class WebsiteCrawler {
         printInput();
         printCrawledHeadlines();
         crawlWebsiteLinks();
-        printRecursivelyCrawledWebsites();
+        recursivelyPrintCrawledWebsites();
         closeWriter();
     }
 
@@ -104,7 +104,7 @@ public class WebsiteCrawler {
 
     // Hint: To uphold desired output format,
     // start new crawler & print links should happen here
-    protected void printRecursivelyCrawledWebsites() {
+    protected void recursivelyPrintCrawledWebsites() {
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
             boolean isBrokenLink = isBrokenLink(crawledLink);
@@ -157,8 +157,7 @@ public class WebsiteCrawler {
     protected int getHeaderLevelFromName(String headerLevelName) {
         //expected headerLevelNames follow the format "h1", "h2", ... , "h6"
         String headerNumber = headerLevelName.substring(1);
-        int headerLevel = Integer.parseInt(headerNumber);
-        return headerLevel;
+        return Integer.parseInt(headerNumber);
     }
 
     protected void printCrawledLink(String crawledLink, boolean isBrokenLink) {
@@ -339,5 +338,9 @@ public class WebsiteCrawler {
 
     public String getSourceLanguage() {
         return sourceLanguage;
+    }
+
+    public void setMaxDepthOfRecursiveSearch(int maxDepthOfRecursiveSearch) {
+        this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
     }
 }
