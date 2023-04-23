@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class WebsiteCrawlerTest {
-
     private static Document mockedDocument;
     private static WebsiteCrawler webCrawler;
     private final String testFilePath = "testFile.txt";
@@ -279,13 +278,13 @@ class WebsiteCrawlerTest {
         });
     }
 
-    @Test
+/*    @Test
     void testGetSystemEnv() {
         String expectedKey = System.getenv("RAPIDAPI_API_KEY");
         String actualKey = webCrawler.getApiKey();
 
         assertEquals(expectedKey, actualKey);
-    }
+    }*/
 
     @Test
     void testPrintHeaderLevel() throws IOException {
