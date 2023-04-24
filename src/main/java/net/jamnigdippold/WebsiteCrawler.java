@@ -271,4 +271,8 @@ public class WebsiteCrawler {
     public String getSourceLanguage() {
         return sourceLanguage;
     }
+
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
+    }
 }

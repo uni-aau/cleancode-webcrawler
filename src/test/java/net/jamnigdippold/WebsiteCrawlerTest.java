@@ -65,6 +65,29 @@ class WebsiteCrawlerTest {
     }
 
     @Test
+    void testEstablishConnection() throws IOException {
+        mockJsoup();
+        doCallRealMethod().when(webCrawler).establishConnection();
+
+        webCrawler.establishConnection();
+
+        mockedJsoup.verify(() -> Jsoup.connect(any()));
+
+        mockedJsoup.close();
+    }
+
+    @Test
+    void testEstablishConnectionError() throws IOException {
+        mockJsoup();
+        doCallRealMethod().when(webCrawler).establishConnection();
+        webCrawler.setWebsiteUrl("Not a real URL");
+
+        assertThrows(RuntimeException.class, () -> webCrawler.establishConnection());
+
+        mockedJsoup.close();
+    }
+
+    @Test
     void testCreateFileWriterError() {
         assertThrows(RuntimeException.class, () -> webCrawler.createFileWriter(""));
     }
