@@ -98,7 +98,7 @@ class WebsiteCrawlerTest {
 
         webCrawler.crawlHeadlines();
 
-        assertEquals(crawledHeadlines.text(), webCrawler.getCrawledHeadlineElements().text());
+        assertEquals(crawledHeadlines.text(), webCrawler.getcrawledHeadlines().text());
     }
 
     @Test
@@ -287,7 +287,7 @@ class WebsiteCrawlerTest {
         mockHeadingTranslation();
 
         crawledHeadlines = addElements();
-        webCrawler.setCrawledHeadlineElements(crawledHeadlines);
+        webCrawler.setcrawledHeadlines(crawledHeadlines);
         webCrawler.printCrawledHeadlines();
 
         assertEquals(expectedPrintMessage, outputStream.toString());
@@ -300,7 +300,7 @@ class WebsiteCrawlerTest {
         mockHeadingTranslation();
 
         crawledHeadlines = addElements();
-        webCrawler.setCrawledHeadlineElements(crawledHeadlines);
+        webCrawler.setcrawledHeadlines(crawledHeadlines);
         webCrawler.setCurrentDepthOfRecursiveSearch(1);
         webCrawler.printCrawledHeadlines();
 
@@ -382,9 +382,9 @@ class WebsiteCrawlerTest {
     @Test
     void testPrintHeaderLevel() throws IOException {
         String expectedPrintMessage = "# ";
-        Element crawledHeadlineElement = new Element("h1").text("Heading h1");
+        Element crawledHeadline = new Element("h1").text("Heading h1");
 
-        webCrawler.printHeaderLevel(crawledHeadlineElement);
+        webCrawler.printHeaderLevel(crawledHeadline);
 
         assertEquals(expectedPrintMessage, outputStream.toString());
         assertEqualFileContent("# ", testFilePath);

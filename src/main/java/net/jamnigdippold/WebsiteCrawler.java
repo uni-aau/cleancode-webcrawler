@@ -15,7 +15,7 @@ public class WebsiteCrawler {
     private int maxDepthOfRecursiveSearch;
     private int currentDepthOfRecursiveSearch;
     private Document websiteDocumentConnection;
-    private Elements crawledHeadlineElements;
+    private Elements crawledHeadlines;
     private List<String> crawledLinks;
     private String sourceLanguage;
     private String targetLanguage;
@@ -88,7 +88,7 @@ public class WebsiteCrawler {
     }
 
     protected void crawlHeadlines() {
-        crawledHeadlineElements = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
+        crawledHeadlines = websiteDocumentConnection.select("h1, h2, h3, h4, h5, h6");
     }
 
     protected void crawlWebsiteLinks() {
@@ -133,23 +133,23 @@ public class WebsiteCrawler {
     }
 
     protected void setSourceLanguage() {
-        translator.setTranslationSourceLanguage(crawledHeadlineElements);
+        translator.setTranslationSourceLanguage(crawledHeadlines);
         sourceLanguage = translator.getSourceLanguage();
     }
 
     protected void printCrawledHeadlines() {
-        for (Element crawledHeadlineElement : crawledHeadlineElements) {
-            printHeaderLevel(crawledHeadlineElement);
+        for (Element crawledHeadline : crawledHeadlines) {
+            printHeaderLevel(crawledHeadline);
             if (currentDepthOfRecursiveSearch > 0) {
                 printDepthIndicator();
             }
-            printString(translator.getTranslatedHeadline(crawledHeadlineElement.text()) + "\n");
+            printString(translator.getTranslatedHeadline(crawledHeadline.text()) + "\n");
         }
         printString("\n");
     }
 
-    protected void printHeaderLevel(Element crawledHeadlineElement) {
-        int numOfHeader = getHeaderLevelFromName(crawledHeadlineElement.normalName());
+    protected void printHeaderLevel(Element crawledHeadline) {
+        int numOfHeader = getHeaderLevelFromName(crawledHeadline.normalName());
         for (int i = 0; i < numOfHeader; i++) {
             printString("#");
         }
@@ -204,12 +204,12 @@ public class WebsiteCrawler {
         fileWriter.flush();
     }
 
-    public Elements getCrawledHeadlineElements() {
-        return crawledHeadlineElements;
+    public Elements getcrawledHeadlines() {
+        return crawledHeadlines;
     }
 
-    public void setCrawledHeadlineElements(Elements crawledHeadlineElements) {
-        this.crawledHeadlineElements = crawledHeadlineElements;
+    public void setcrawledHeadlines(Elements crawledHeadlines) {
+        this.crawledHeadlines = crawledHeadlines;
     }
 
     public List<String> getCrawledLinks() {
