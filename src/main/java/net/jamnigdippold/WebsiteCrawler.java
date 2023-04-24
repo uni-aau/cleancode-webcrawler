@@ -133,7 +133,8 @@ public class WebsiteCrawler {
     }
 
     protected void setSourceLanguage() {
-        translator.setTranslationSourceLanguage(crawledHeadlineElements); // Todo
+        translator.setTranslationSourceLanguage(crawledHeadlineElements);
+        sourceLanguage = translator.getSourceLanguage();
     }
 
     protected void printCrawledHeadlines() {
@@ -265,5 +266,9 @@ public class WebsiteCrawler {
 
     public TextTranslator getTranslator() {
         return translator;
+    }
+
+    public String getSourceLanguage() {
+        return sourceLanguage;
     }
 }
