@@ -119,6 +119,7 @@ class WebsiteCrawlerTest {
 
     @Test
     void testStartCrawling(){
+        webCrawler.closeWriter(); // Close the old writer in order that the TestFile gets successfully deleted
         webCrawler = mock(WebsiteCrawler.class);
         doCallRealMethod().when(webCrawler).startCrawling();
 
