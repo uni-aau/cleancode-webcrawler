@@ -17,7 +17,7 @@ public class TextTranslator {
         this.targetLanguage = targetLanguage;
     }
 
-    protected void setSourceLanguage(Elements crawledHeadlineElements) {
+    protected void setTranslationSourceLanguage(Elements crawledHeadlineElements) {
         String headline = crawledHeadlineElements.get(0).text();
         sourceLanguage = getLanguageCodeFromHeadline(headline);
     }

@@ -133,7 +133,7 @@ public class WebsiteCrawler {
     }
 
     protected void setSourceLanguage() {
-        translator.setSourceLanguage(crawledHeadlineElements); // Todo
+        translator.setTranslationSourceLanguage(crawledHeadlineElements); // Todo
     }
 
     protected void printCrawledHeadlines() {

@@ -44,7 +44,7 @@ public class TextTranslatorTest {
         mockResponseExtraction(expectedResponseOutput);
         doReturn(mockedResponse).when(translator).executeAPIRequest("Heading h1");
 
-        translator.setSourceLanguage(crawledHeadlines);
+        translator.setTranslationSourceLanguage(crawledHeadlines);
 
         assertEquals(expectedSourceLanguage, translator.getSourceLanguage());
     }
