@@ -77,7 +77,7 @@ public class Main {
     }
 
     public static void getLanguageInput() {
-        System.out.println("Enter your language code [zB de]");
+        System.out.println("Please enter the language code for the language into which the headers should be translated [e.g. de]");
         languageCode = inputScanner.nextLine();
 
         while (!isValidLanguageCode(languageCode)) {

@@ -48,6 +48,18 @@ public class TextTranslatorTest {
 
         assertEquals(expectedSourceLanguage, translator.getSourceLanguage());
     }
+    @Test
+    void testSetSourceLanguageNoHeadlines() throws IOException {
+        String expectedSourceLanguage = "auto";
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
+        Elements crawledHeadlines = new Elements();
+        mockResponseExtraction(expectedResponseOutput);
+        doReturn(mockedResponse).when(translator).executeAPIRequest("Heading h1");
+
+        translator.setTranslationSourceLanguage(crawledHeadlines);
+
+        assertEquals(expectedSourceLanguage, translator.getSourceLanguage());
+    }
 
     @Test
     void testRequestBodyCreation() throws IOException {

@@ -1,7 +1,5 @@
 package net.jamnigdippold;
 
-import okhttp3.FormBody;
-import okhttp3.Request;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -64,6 +62,29 @@ class WebsiteCrawlerTest {
         webCrawler = null;
         System.setOut(System.out);
         new File(testFilePath).delete();
+    }
+
+    @Test
+    void testEstablishConnection() throws IOException {
+        mockJsoup();
+        doCallRealMethod().when(webCrawler).establishConnection();
+
+        webCrawler.establishConnection();
+
+        mockedJsoup.verify(() -> Jsoup.connect(any()));
+
+        mockedJsoup.close();
+    }
+
+    @Test
+    void testEstablishConnectionError() throws IOException {
+        mockJsoup();
+        doCallRealMethod().when(webCrawler).establishConnection();
+        webCrawler.setWebsiteUrl("Not a real URL");
+
+        assertThrows(RuntimeException.class, () -> webCrawler.establishConnection());
+
+        mockedJsoup.close();
     }
 
     @Test
@@ -292,6 +313,22 @@ class WebsiteCrawlerTest {
         doReturn("Überschrift h1").when(translator).getTranslatedHeadline("Heading h1");
     }
 
+    void mockGetSourceLanguage() {
+        webCrawler.setTranslator(translator);
+        doReturn("de").when(translator).getSourceLanguage();
+    }
+
+    @Test
+    void testSetSourceLanguage() {
+        mockGetSourceLanguage();
+
+        webCrawler.setSourceLanguage();
+
+        assertEquals("de", webCrawler.getSourceLanguage());
+        verify(translator).setTranslationSourceLanguage(any());
+        verify(translator).getSourceLanguage();
+    }
+
     @Test
     void testIsBrokenLinkMalformedURL() throws IOException {
         mockJsoup();
@@ -341,13 +378,6 @@ class WebsiteCrawlerTest {
         });
     }
 
-/*    @Test
-    void testGetSystemEnv() {
-        String expectedKey = System.getenv("RAPIDAPI_API_KEY");
-        String actualKey = webCrawler.getApiKey();
-
-        assertEquals(expectedKey, actualKey);
-    }*/
 
     @Test
     void testPrintHeaderLevel() throws IOException {
