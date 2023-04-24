@@ -1,6 +1,5 @@
 package net.jamnigdippold;
 
-import okhttp3.*;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -24,30 +23,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class WebsiteCrawlerTest {
-
     private static Document mockedDocument;
     private static WebsiteCrawler webCrawler;
     private final String testFilePath = "testFile.txt";
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    private ArrayList<String> crawledLinks = new ArrayList<>();
-    private FormBody expectedBody;
-    private Request expectedRequest;
+    private final ArrayList<String> crawledLinks = new ArrayList<>();
     private Elements crawledHeadlines;
     @Mock
-    Request mockedRequest;
-    @Mock
-    OkHttpClient mockedClient;
-    @Mock
-    Response mockedResponse;
-    @Mock
-    ResponseBody mockedResponseBody;
-    @Mock
-    Call mockedCall;
+    TextTranslator translator;
     MockedStatic<Jsoup> mockedJsoup;
     MockedConstruction<WebsiteCrawler> mockedCrawlerConstruction;
 
     @BeforeEach
-
     public void setUp() {
         mockEstablishConnection();
         webCrawler.establishConnection();
@@ -75,6 +62,29 @@ class WebsiteCrawlerTest {
         webCrawler = null;
         System.setOut(System.out);
         new File(testFilePath).delete();
+    }
+
+    @Test
+    void testEstablishConnection() throws IOException {
+        mockJsoup();
+        doCallRealMethod().when(webCrawler).establishConnection();
+
+        webCrawler.establishConnection();
+
+        mockedJsoup.verify(() -> Jsoup.connect(any()));
+
+        mockedJsoup.close();
+    }
+
+    @Test
+    void testEstablishConnectionError() throws IOException {
+        mockJsoup();
+        doCallRealMethod().when(webCrawler).establishConnection();
+        webCrawler.setWebsiteUrl("Not a real URL");
+
+        assertThrows(RuntimeException.class, () -> webCrawler.establishConnection());
+
+        mockedJsoup.close();
     }
 
     @Test
@@ -118,7 +128,7 @@ class WebsiteCrawlerTest {
     }
 
     @Test
-    void testStartCrawling(){
+    void testStartCrawling() {
         webCrawler.closeWriter(); // Close the old writer in order that the TestFile gets successfully deleted
         webCrawler = mock(WebsiteCrawler.class);
         doCallRealMethod().when(webCrawler).startCrawling();
@@ -128,6 +138,7 @@ class WebsiteCrawlerTest {
         verify(webCrawler).establishConnection();
         verify(webCrawler).crawlHeadlines();
         verify(webCrawler).setSourceLanguage();
+        verify(webCrawler).initializeTranslator();
         verify(webCrawler).printInput();
         verify(webCrawler).printCrawledHeadlines();
         verify(webCrawler).crawlWebsiteLinks();
@@ -223,20 +234,6 @@ class WebsiteCrawlerTest {
     }
 
     @Test
-    void testSetSourceLanguage() throws IOException {
-        String expectedSourceLanguage = "en";
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
-        crawledHeadlines = addElements();
-        mockResponseExtraction(expectedResponseOutput);
-        doReturn(mockedResponse).when(webCrawler).executeAPIRequest("Heading h1");
-
-        webCrawler.setCrawledHeadlineElements(crawledHeadlines);
-        webCrawler.setSourceLanguage();
-
-        assertEquals(expectedSourceLanguage, webCrawler.getSourceLanguage());
-    }
-
-    @Test
     void testConversionAbsoluteToRelativeUrl() {
         String relativeUrl = "./relativeUrl";
         String absoluteUrl = "https://example.com/relativeUrl";
@@ -253,6 +250,15 @@ class WebsiteCrawlerTest {
         String webCrawlerConversionOutput = webCrawler.convertRelativeUrlToAbsoluteURL(absoluteUrl);
 
         assertEquals(absoluteUrl, webCrawlerConversionOutput);
+    }
+
+    @Test
+    void testTranslatorInitialization() {
+        webCrawler.setTargetLanguage("de");
+
+        webCrawler.initializeTranslator();
+
+        assertEquals("de", webCrawler.getTranslator().getTargetLanguage());
     }
 
     @Test
@@ -303,7 +309,24 @@ class WebsiteCrawlerTest {
     }
 
     void mockHeadingTranslation() {
-        doReturn("Überschrift h1").when(webCrawler).getTranslatedHeadline("Heading h1");
+        webCrawler.setTranslator(translator);
+        doReturn("Überschrift h1").when(translator).getTranslatedHeadline("Heading h1");
+    }
+
+    void mockGetSourceLanguage() {
+        webCrawler.setTranslator(translator);
+        doReturn("de").when(translator).getSourceLanguage();
+    }
+
+    @Test
+    void testSetSourceLanguage() {
+        mockGetSourceLanguage();
+
+        webCrawler.setSourceLanguage();
+
+        assertEquals("de", webCrawler.getSourceLanguage());
+        verify(translator).setTranslationSourceLanguage(any());
+        verify(translator).getSourceLanguage();
     }
 
     @Test
@@ -355,13 +378,6 @@ class WebsiteCrawlerTest {
         });
     }
 
-    @Test
-    void testGetSystemEnv() {
-        String expectedKey = System.getenv("RAPIDAPI_API_KEY");
-        String actualKey = webCrawler.getApiKey();
-
-        assertEquals(expectedKey, actualKey);
-    }
 
     @Test
     void testPrintHeaderLevel() throws IOException {
@@ -471,182 +487,6 @@ class WebsiteCrawlerTest {
 
         assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
         webCrawler.setFileWriter(actualFileWriter);
-    }
-
-    @Test
-    void testRequestBodyCreation() throws IOException {
-        String sourceLanguage = "auto";
-        String targetLanguage = "de";
-        String headerText = "Headline 1";
-        createBody(sourceLanguage, targetLanguage, headerText);
-
-        RequestBody actualBody = webCrawler.createNewRequestBody(headerText);
-
-        assertEquals(expectedBody.contentType(), actualBody.contentType());
-        assertEquals(expectedBody.contentLength(), actualBody.contentLength());
-    }
-
-    @Test
-    void testTranslationRequestExecution() throws IOException {
-        mockNewClientCall();
-
-        assertNotNull(webCrawler.executeTranslationApiRequest(mockedRequest));
-    }
-
-    @Test
-    void testTranslationRequestExecutionError() throws IOException {
-        mockNewClientCall();
-        doThrow(new IOException()).when(mockedCall).execute();
-
-        assertThrows(RuntimeException.class, () -> webCrawler.executeTranslationApiRequest(mockedRequest));
-    }
-
-    @Test
-    void testTranslationExtraction() throws IOException {
-        String expectedReturnValue = "Überschrift h1";
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Überschrift h1\"\n}\n}";
-        mockResponseExtraction(expectedResponseOutput);
-
-        String actualReturnValue = webCrawler.extractTranslatedText(mockedResponse);
-
-        assertEquals(expectedReturnValue, actualReturnValue);
-    }
-
-    @Test
-    void testTranslatedTextExtractionError() throws IOException {
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
-        mockResponseExtraction(expectedResponseOutput);
-        doThrow(new IOException()).when(mockedResponseBody).string();
-
-        assertThrows(RuntimeException.class, () -> webCrawler.extractTranslatedText(mockedResponse));
-    }
-
-    @Test
-    void testTranslatedTextExtractionFallback() throws IOException {
-        String expectedResponseOutput = "{\n\"status\": \"error\",\n\"message\": \"source language cannot be the same as target language\"\n}";
-        mockResponseExtraction(expectedResponseOutput);
-
-        String actualReturnValue = webCrawler.extractTranslatedText(mockedResponse);
-
-        assertNull(actualReturnValue);
-    }
-
-    @Test
-    void testLanguageCodeExtraction() throws IOException {
-        String expectedLanguageCode = "en";
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
-        mockResponseExtraction(expectedResponseOutput);
-
-        String actualLanguageCode = webCrawler.extractLanguageCode(mockedResponse);
-
-        assertEquals(expectedLanguageCode, actualLanguageCode);
-    }
-
-    @Test
-    void testLanguageCodeExtractionError() throws IOException {
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
-        mockResponseExtraction(expectedResponseOutput);
-        doThrow(new IOException()).when(mockedResponseBody).string();
-
-        assertThrows(RuntimeException.class, () -> webCrawler.extractLanguageCode(mockedResponse));
-    }
-
-    @Test
-    void testGetTranslatedHeadline() throws IOException {
-        String expectedTranslatedHeadline = "Ueberschrift h1";
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
-        mockResponseExtraction(expectedResponseOutput);
-        doReturn(mockedResponse).when(webCrawler).executeAPIRequest("Heading h1");
-
-        String actualTranslatedHeadline = webCrawler.getTranslatedHeadline("Heading h1");
-
-        assertEquals(expectedTranslatedHeadline, actualTranslatedHeadline);
-    }
-
-    @Test
-    void testGetTranslatedHeadlineFallback() throws IOException {
-        String expectedTranslatedHeadline = "Heading h1";
-        String expectedResponseOutput = "{\n\"status\": \"error\",\n\"message\": \"source language cannot be the same as target language\"\n}";
-        mockResponseExtraction(expectedResponseOutput);
-        doReturn(mockedResponse).when(webCrawler).executeAPIRequest("Heading h1");
-
-        String actualTranslatedHeadline = webCrawler.getTranslatedHeadline("Heading h1");
-
-        assertEquals(expectedTranslatedHeadline, actualTranslatedHeadline);
-    }
-
-    @Test
-    void testGetLanguageCodeFromHeadline() throws IOException {
-        String expectedLanguageCode = "en";
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
-        mockResponseExtraction(expectedResponseOutput);
-        doReturn(mockedResponse).when(webCrawler).executeAPIRequest("Heading h1");
-
-        String actualLanguageCode = webCrawler.getLanguageCodeFromHeadline("Heading h1");
-
-        assertEquals(expectedLanguageCode, actualLanguageCode);
-    }
-
-    @Test
-    void testExecuteAPIRequest() throws IOException {
-        mockNewClientCall();
-        mockGetAPIKey();
-        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
-        mockResponseExtraction(expectedResponseOutput);
-
-        Response actualResponse = webCrawler.executeAPIRequest("Heading h1");
-
-        assertEquals(mockedResponse.body().string(), actualResponse.body().string());
-    }
-
-    @Test
-    void testTranslationApiRequestCreation() {
-        String sourceLanguage = "auto";
-        String targetLanguage = "de";
-        String headerText = "Headline 1";
-        createBody(sourceLanguage, targetLanguage, headerText);
-        createRequest();
-        mockGetAPIKey();
-
-        Request actualRequestOutput = webCrawler.createTranslationApiRequest(expectedBody);
-
-        assertEquals(expectedRequest.body(), actualRequestOutput.body());
-        assertEquals(expectedRequest.url(), actualRequestOutput.url());
-        assertEquals(expectedRequest.headers(), actualRequestOutput.headers());
-    }
-
-    private void createRequest() {
-        String mockApiKey = "mocked-api-key";
-        expectedRequest = new Request.Builder()
-                .url("https://text-translator2.p.rapidapi.com/translate")
-                .post(expectedBody)
-                .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", mockApiKey)
-                .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
-                .build();
-    }
-
-    private void createBody(String sourceLanguage, String targetLanguage, String headerText) {
-        expectedBody = new FormBody.Builder()
-                .add("source_language", sourceLanguage)
-                .add("target_language", targetLanguage)
-                .add("text", headerText)
-                .build();
-    }
-
-    private void mockNewClientCall() throws IOException {
-        when(mockedClient.newCall(any())).thenReturn(mockedCall);
-        when(mockedCall.execute()).thenReturn(mockedResponse);
-        webCrawler.setClient(mockedClient);
-    }
-
-    private void mockGetAPIKey() {
-        doReturn("mocked-api-key").when(webCrawler).getApiKey();
-    }
-
-    private void mockResponseExtraction(String expectedResponseOutput) throws IOException {
-        when(mockedResponse.body()).thenReturn(mockedResponseBody);
-        when(mockedResponseBody.string()).thenReturn(expectedResponseOutput);
     }
 
     private Elements addElements() {

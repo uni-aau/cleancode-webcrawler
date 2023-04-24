@@ -229,7 +229,7 @@ class MainTest {
     }
 
     private void assertTestGetLanguage() {
-        assertEquals("Enter your language code [zB de]" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("Please enter the language code for the language into which the headers should be translated [e.g. de]" + System.getProperty("line.separator"), outContent.toString());
         assertEquals("", errContent.toString());
         assertEquals("en", Main.languageCode);
     }
@@ -244,7 +244,7 @@ class MainTest {
     }
 
     private void assertTestGetLanguageError() {
-        assertEquals("Enter your language code [zB de]" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("Please enter the language code for the language into which the headers should be translated [e.g. de]" + System.getProperty("line.separator"), outContent.toString());
         assertEquals("ERROR: Please enter a valid language code." + System.getProperty("line.separator") + "ERROR: Please enter a valid language code." + System.getProperty("line.separator"), errContent.toString());
         assertEquals("en", Main.languageCode);
     }

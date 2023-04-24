@@ -1,8 +1,5 @@
 package net.jamnigdippold;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,7 +20,7 @@ public class WebsiteCrawler {
     private String sourceLanguage;
     private String targetLanguage;
     private FileWriter fileWriter;
-    private OkHttpClient client = new OkHttpClient();
+    private TextTranslator translator;
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
         createFileWriter(outputPath);
@@ -55,14 +52,15 @@ public class WebsiteCrawler {
         this.websiteUrl = websiteUrl;
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
         this.targetLanguage = targetLanguage;
-        this.sourceLanguage = "auto";
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
         this.fileWriter = writer;
+        this.sourceLanguage = "auto";
     }
 
     public void startCrawling() {
         establishConnection();
         crawlHeadlines();
+        initializeTranslator();
         setSourceLanguage();
         printInput();
         printCrawledHeadlines();
@@ -130,9 +128,13 @@ public class WebsiteCrawler {
         }
     }
 
+    protected void initializeTranslator() {
+        translator = new TextTranslator(targetLanguage);
+    }
+
     protected void setSourceLanguage() {
-        String headline = crawledHeadlineElements.get(0).text();
-        sourceLanguage = getLanguageCodeFromHeadline(headline);
+        translator.setTranslationSourceLanguage(crawledHeadlineElements);
+        sourceLanguage = translator.getSourceLanguage();
     }
 
     protected void printCrawledHeadlines() {
@@ -141,7 +143,7 @@ public class WebsiteCrawler {
             if (currentDepthOfRecursiveSearch > 0) {
                 printDepthIndicator();
             }
-            printString(getTranslatedHeadline(crawledHeadlineElement.text()) + "\n");
+            printString(translator.getTranslatedHeadline(crawledHeadlineElement.text()) + "\n");
         }
         printString("\n");
     }
@@ -198,104 +200,6 @@ public class WebsiteCrawler {
             fileWriter.close();
     }
 
-    protected RequestBody createNewRequestBody(String headerText) {
-        return new FormBody.Builder()
-                .add("source_language", sourceLanguage)
-                .add("target_language", targetLanguage)
-                .add("text", headerText)
-                .build();
-    }
-
-    protected Request createTranslationApiRequest(RequestBody body) {
-        String apiKey = getApiKey();
-        return new Request.Builder()
-                .url("https://text-translator2.p.rapidapi.com/translate")
-                .post(body)
-                .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", apiKey)
-                .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
-                .build();
-    }
-
-    protected String getApiKey() {
-        return System.getenv("RAPIDAPI_API_KEY");
-    }
-
-    protected Response executeTranslationApiRequest(Request translationApiRequest) {
-        try {
-            return client.newCall(translationApiRequest).execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected String extractTranslatedText(Response apiResponse) {
-        try {
-            return extractTranslation(apiResponse);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected String extractTranslation(Response apiResponse) throws IOException {
-        String apiResponseBody;
-        JsonNode node;
-
-        apiResponseBody = apiResponse.body().string();
-        node = new ObjectMapper().readTree(apiResponseBody);
-
-        if (checkNodeSuccessStatus(node)) {
-            return node.get("data").get("translatedText").asText();
-        } else {
-            return null;
-        }
-    }
-
-    private boolean checkNodeSuccessStatus(JsonNode node) {
-        return node.get("status").asText().equals("success");
-    }
-
-    protected String extractLanguageCode(Response apiResponse) {
-        try {
-            return tryToExtractLanguageCode(apiResponse);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
-    protected String tryToExtractLanguageCode(Response apiResponse) throws IOException {
-        String apiResponseBody;
-        JsonNode node;
-
-        apiResponseBody = apiResponse.body().string();
-        node = new ObjectMapper().readTree(apiResponseBody);
-
-        return node.get("data").get("detectedSourceLanguage").get("code").asText();
-
-    }
-
-    protected String getTranslatedHeadline(String crawledHeadlineText) {
-        Response apiResponse = executeAPIRequest(crawledHeadlineText);
-        String translatedString = extractTranslatedText(apiResponse);
-        if (translatedString == null)
-            translatedString = crawledHeadlineText;
-
-        return translatedString;
-    }
-
-    protected String getLanguageCodeFromHeadline(String crawledHeadlineText) {
-        Response apiResponse = executeAPIRequest(crawledHeadlineText);
-
-        return extractLanguageCode(apiResponse);
-    }
-
-    protected Response executeAPIRequest(String crawledHeadlineText) {
-        RequestBody body = createNewRequestBody(crawledHeadlineText);
-        Request request = createTranslationApiRequest(body);
-
-        return executeTranslationApiRequest(request);
-    }
-
     public void flushWriter() throws IOException {
         fileWriter.flush();
     }
@@ -324,20 +228,12 @@ public class WebsiteCrawler {
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
     }
 
-    public void setClient(OkHttpClient client) {
-        this.client = client;
-    }
-
     public FileWriter getFileWriter() {
         return fileWriter;
     }
 
     public void setFileWriter(FileWriter fileWriter) {
         this.fileWriter = fileWriter;
-    }
-
-    public String getSourceLanguage() {
-        return sourceLanguage;
     }
 
     public void setMaxDepthOfRecursiveSearch(int maxDepthOfRecursiveSearch) {
@@ -358,5 +254,25 @@ public class WebsiteCrawler {
 
     public String getTargetLanguage() {
         return targetLanguage;
+    }
+
+    public void setTargetLanguage(String targetLanguage) {
+        this.targetLanguage = targetLanguage;
+    }
+
+    public void setTranslator(TextTranslator translator) {
+        this.translator = translator;
+    }
+
+    public TextTranslator getTranslator() {
+        return translator;
+    }
+
+    public String getSourceLanguage() {
+        return sourceLanguage;
+    }
+
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
     }
 }

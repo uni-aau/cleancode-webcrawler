@@ -31,7 +31,7 @@ Tiefe visuell dargestellt
   Ausführung ein Translation-API Key als **Systemumgebungsvariable** festgelegt werden
     - **API-Name:** ``RAPIDAPI_API_KEY``
     - **API-Key** Muss über die API-Seite erstellt werden (Login reicht hier aus)
-    - **Hinzufügung zu Windows:** Systemumgebungsvariablen bearbeiten -> Umgebungsvariablen -> Benutzervariablen
+    - **Hinzufügung zu Windows:** Systemumgebungsvariablen bearbeiten -> Umgebungsvariablen -> Benutzervariablen. Nach der Hinzufügung muss IntelliJ neugestartet werden.
 - Die **Main**-Klasse dient als Einstiegspunkt für den Crawler. Nach Ausführung wird die Person aufgefordert, die URL,
   Tiefe des Crawlens, Sprache, sowie das Markdown-File anzugeben, in welches geschrieben werden soll.
 - Die ausgelesenen Daten können dann in der **Konsole** oder im **Markdown-File** gefunden werden.
