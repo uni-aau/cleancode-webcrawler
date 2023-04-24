@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class TextTranslatorTest {
+class TextTranslatorTest {
     private static TextTranslator translator;
     private FormBody expectedBody;
     private Request expectedRequest;
