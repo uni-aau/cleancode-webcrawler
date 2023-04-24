@@ -1,8 +1,5 @@
 package net.jamnigdippold;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -57,6 +54,7 @@ public class WebsiteCrawler {
         this.targetLanguage = targetLanguage;
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
         this.fileWriter = writer;
+        this.sourceLanguage = "auto";
     }
 
     public void startCrawling() {
@@ -75,7 +73,7 @@ public class WebsiteCrawler {
         if (currentDepthOfRecursiveSearch == 0) {
             printString("input: <a>" + websiteUrl + "</a>\n");
             printString("<br>depth: " + maxDepthOfRecursiveSearch + "\n");
-            printString("<br>source language: " + translator.getSourceLanguage() + "\n");
+            printString("<br>source language: " + sourceLanguage + "\n");
             printString("<br>Target language: " + targetLanguage + "\n");
             printString("<br>summary:\n");
         }
@@ -229,20 +227,12 @@ public class WebsiteCrawler {
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
     }
 
-//    public void setClient(OkHttpClient client) {
-//        this.client = client;
-//    }
-
     public FileWriter getFileWriter() {
         return fileWriter;
     }
 
     public void setFileWriter(FileWriter fileWriter) {
         this.fileWriter = fileWriter;
-    }
-
-    public String getSourceLanguage() {
-        return sourceLanguage;
     }
 
     public void setMaxDepthOfRecursiveSearch(int maxDepthOfRecursiveSearch) {
@@ -263,5 +253,9 @@ public class WebsiteCrawler {
 
     public String getTargetLanguage() {
         return targetLanguage;
+    }
+
+    public void setTranslator(TextTranslator translator) {
+        this.translator = translator;
     }
 }

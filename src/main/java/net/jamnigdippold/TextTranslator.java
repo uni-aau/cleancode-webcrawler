@@ -2,9 +2,8 @@ package net.jamnigdippold;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import okhttp3.*;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 
@@ -125,7 +124,7 @@ public class TextTranslator {
         return sourceLanguage;
     }
 
-    public String getTargetLanguage() {
-        return targetLanguage;
+    public void setClient(OkHttpClient client) {
+        this.client = client;
     }
 }
