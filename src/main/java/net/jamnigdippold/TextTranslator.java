@@ -18,8 +18,10 @@ public class TextTranslator {
     }
 
     protected void setTranslationSourceLanguage(Elements crawledHeadlineElements) {
-        String headline = crawledHeadlineElements.get(0).text();
-        sourceLanguage = getLanguageCodeFromHeadline(headline);
+        if (crawledHeadlineElements.size() > 0) {
+            String headline = crawledHeadlineElements.get(0).text();
+            sourceLanguage = getLanguageCodeFromHeadline(headline);
+        }
     }
 
     protected RequestBody createNewRequestBody(String headerText) {
