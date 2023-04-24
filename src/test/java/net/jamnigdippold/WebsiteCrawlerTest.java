@@ -116,6 +116,7 @@ class WebsiteCrawlerTest {
         verify(webCrawler).establishConnection();
         verify(webCrawler).crawlHeadlines();
         verify(webCrawler).setSourceLanguage();
+        verify(webCrawler).initializeTranslator();
         verify(webCrawler).printInput();
         verify(webCrawler).printCrawledHeadlines();
         verify(webCrawler).crawlWebsiteLinks();

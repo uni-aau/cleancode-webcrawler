@@ -128,7 +128,7 @@ public class WebsiteCrawler {
         }
     }
 
-    private void initializeTranslator() {
+    protected void initializeTranslator() {
         translator = new TextTranslator(targetLanguage);
     }
 
