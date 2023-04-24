@@ -231,6 +231,15 @@ class WebsiteCrawlerTest {
     }
 
     @Test
+    void testTranslatorInitialization() {
+        webCrawler.setTargetLanguage("de");
+
+        webCrawler.initializeTranslator();
+
+        assertEquals("de", webCrawler.getTranslator().getTargetLanguage());
+    }
+
+    @Test
     void testStringPrinting() throws IOException {
         String printMessage = "https://example.com";
 

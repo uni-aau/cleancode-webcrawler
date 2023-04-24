@@ -10,7 +10,7 @@ import java.io.IOException;
 public class TextTranslator {
     private OkHttpClient client = new OkHttpClient();
     private String sourceLanguage;
-    private String targetLanguage;
+    private final String targetLanguage;
 
     public TextTranslator(String targetLanguage) {
         this.sourceLanguage = "auto";
@@ -122,6 +122,10 @@ public class TextTranslator {
 
     public String getSourceLanguage() {
         return sourceLanguage;
+    }
+
+    public String getTargetLanguage() {
+        return targetLanguage;
     }
 
     public void setClient(OkHttpClient client) {

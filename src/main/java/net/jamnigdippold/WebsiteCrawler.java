@@ -255,7 +255,15 @@ public class WebsiteCrawler {
         return targetLanguage;
     }
 
+    public void setTargetLanguage(String targetLanguage) {
+        this.targetLanguage = targetLanguage;
+    }
+
     public void setTranslator(TextTranslator translator) {
         this.translator = translator;
+    }
+
+    public TextTranslator getTranslator() {
+        return translator;
     }
 }
