@@ -17,9 +17,9 @@ public class TextTranslator {
         this.targetLanguage = targetLanguage;
     }
 
-    protected void setTranslationSourceLanguage(Elements crawledHeadlineElements) {
-        if (!crawledHeadlineElements.isEmpty()) {
-            String headline = crawledHeadlineElements.get(0).text();
+    protected void setTranslationSourceLanguage(Elements crawledHeadlines) {
+        if (!crawledHeadlines.isEmpty()) {
+            String headline = crawledHeadlines.get(0).text();
             sourceLanguage = getLanguageCodeFromHeadline(headline);
         }
     }
