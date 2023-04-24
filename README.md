@@ -30,8 +30,7 @@ Tiefe visuell dargestellt
 - Da eine [**Translation-API**](https://rapidapi.com/dickyagustin/api/text-translator2) verwendet wird, muss vor der
   Ausführung ein Translation-API Key als **Systemumgebungsvariable** festgelegt werden
     - **API-Name:** ``RAPIDAPI_API_KEY``
-    - **API-Key** (für Contributor des
-      Projekts): [Github Repository Secret](https://github.com/uni-aau/delta-dkt/settings/secrets/actions)
+    - **API-Key** Muss über die API-Seite erstellt werden (Login reicht hier aus)
     - **Hinzufügung zu Windows:** Systemumgebungsvariablen bearbeiten -> Umgebungsvariablen -> Benutzervariablen
 - Die **Main**-Klasse dient als Einstiegspunkt für den Crawler. Nach Ausführung wird die Person aufgefordert, die URL,
   Tiefe des Crawlens, Sprache, sowie das Markdown-File anzugeben, in welches geschrieben werden soll.
