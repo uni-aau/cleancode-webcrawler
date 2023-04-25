@@ -80,6 +80,7 @@ class WebsiteCrawlerTest {
     void testEstablishConnectionError() throws IOException {
         mockJsoup();
         doCallRealMethod().when(webCrawler).establishConnection();
+
         webCrawler.setWebsiteUrl("Not a real URL");
 
         assertThrows(RuntimeException.class, () -> webCrawler.establishConnection());
@@ -98,7 +99,7 @@ class WebsiteCrawlerTest {
 
         webCrawler.crawlHeadlines();
 
-        assertEquals(crawledHeadlines.text(), webCrawler.getcrawledHeadlines().text());
+        assertEquals(crawledHeadlines.text(), webCrawler.getCrawledHeadlines().text());
     }
 
     @Test
@@ -185,9 +186,9 @@ class WebsiteCrawlerTest {
         mockCrawlerCreation();
         ArrayList<String> crawledLinks = new ArrayList<>();
         crawledLinks.add("https://example.com");
+
         webCrawler.setCrawledLinks(crawledLinks);
         webCrawler.setMaxDepthOfRecursiveSearch(2);
-
         webCrawler.recursivelyPrintCrawledWebsites();
 
         assertEquals("<br>--> link to <a>https://example.com</a>\n" +
@@ -287,7 +288,7 @@ class WebsiteCrawlerTest {
         mockHeadingTranslation();
 
         crawledHeadlines = addElements();
-        webCrawler.setcrawledHeadlines(crawledHeadlines);
+        webCrawler.setCrawledHeadlines(crawledHeadlines);
         webCrawler.printCrawledHeadlines();
 
         assertEquals(expectedPrintMessage, outputStream.toString());
@@ -300,7 +301,7 @@ class WebsiteCrawlerTest {
         mockHeadingTranslation();
 
         crawledHeadlines = addElements();
-        webCrawler.setcrawledHeadlines(crawledHeadlines);
+        webCrawler.setCrawledHeadlines(crawledHeadlines);
         webCrawler.setCurrentDepthOfRecursiveSearch(1);
         webCrawler.printCrawledHeadlines();
 
@@ -480,10 +481,10 @@ class WebsiteCrawlerTest {
     void testFileWriterClosureError() throws IOException {
         FileWriter actualFileWriter = webCrawler.getFileWriter();
         FileWriter mockFileWriter = mock(FileWriter.class);
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
-
-        webCrawler.setFileWriter(mockFileWriter);
         doThrow(new IOException()).when(mockFileWriter).close();
+
+        webCrawler.setCurrentDepthOfRecursiveSearch(0);
+        webCrawler.setFileWriter(mockFileWriter);
 
         assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
         webCrawler.setFileWriter(actualFileWriter);
