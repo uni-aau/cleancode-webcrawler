@@ -64,11 +64,9 @@ public class TextTranslator {
     }
 
     protected String extractTranslation(Response apiResponse) throws IOException {
-        String apiResponseBody;
         JsonNode node;
 
-        apiResponseBody = apiResponse.body().string();
-        node = new ObjectMapper().readTree(apiResponseBody);
+        node = createNode(apiResponse);
 
         if (checkNodeSuccessStatus(node)) {
             return node.get("data").get("translatedText").asText();
@@ -90,14 +88,19 @@ public class TextTranslator {
     }
 
     protected String tryToExtractLanguageCode(Response apiResponse) throws IOException {
-        String apiResponseBody;
         JsonNode node;
 
-        apiResponseBody = apiResponse.body().string();
-        node = new ObjectMapper().readTree(apiResponseBody);
+        node = createNode(apiResponse);
 
         return node.get("data").get("detectedSourceLanguage").get("code").asText();
+    }
 
+    private JsonNode createNode(Response apiResponse) throws IOException {
+        String apiResponseBody;
+
+        apiResponseBody = apiResponse.body().string();
+
+        return new ObjectMapper().readTree(apiResponseBody);
     }
 
     protected String getTranslatedHeadline(String crawledHeadlineText) {

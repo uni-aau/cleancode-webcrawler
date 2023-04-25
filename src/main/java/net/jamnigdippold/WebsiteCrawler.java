@@ -204,11 +204,11 @@ public class WebsiteCrawler {
         fileWriter.flush();
     }
 
-    public Elements getcrawledHeadlines() {
+    public Elements getCrawledHeadlines() {
         return crawledHeadlines;
     }
 
-    public void setcrawledHeadlines(Elements crawledHeadlines) {
+    public void setCrawledHeadlines(Elements crawledHeadlines) {
         this.crawledHeadlines = crawledHeadlines;
     }
 
