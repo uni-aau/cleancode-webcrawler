@@ -21,7 +21,7 @@ Tiefe visuell dargestellt
 ### Dependencies
 
 - **Java JDK Version:** 11
-- **Module SDK:** oenjdk-17
+- **Module SDK:** openjdk-17
 - **Maven:** 3.5.1 oder höher
 - **Verwendeter Code-Editor:** IntelliJ IDEA
 
