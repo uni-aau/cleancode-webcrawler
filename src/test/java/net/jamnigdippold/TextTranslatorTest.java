@@ -37,7 +37,7 @@ class TextTranslatorTest {
 
 
     @Test
-    void testSetSourceLanguage() throws IOException {
+    void testCorrectSettingOfSourceLanguageEnglish() throws IOException {
         String expectedSourceLanguage = "en";
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
         Elements crawledHeadlines = addElements();
