@@ -74,13 +74,26 @@ public class Main {
     }
 
     public static void getWebsiteInput() {
-        System.out.println("Enter the website url that should be crawled");
-        websiteUrl = inputScanner.nextLine();
+        websiteUrls = new String[urlAmount];
+        int currentUrl = 0;
 
-        while (WebsiteCrawler.isBrokenLink(websiteUrl)) {
-            System.err.println("ERROR: Cannot connect to url, please enter a valid url");
-            websiteUrl = inputScanner.nextLine();
+        while (currentUrl < urlAmount) {
+            String url = getInputUrl(currentUrl + 1);
+            websiteUrls[currentUrl] = url;
+            currentUrl++;
         }
+    }
+
+    public static String getInputUrl(int currentUrl) {
+        String url;
+        do {
+            System.out.println("Enter the website URL that should be crawled " + currentUrl + "/" + urlAmount);
+            url = inputScanner.nextLine();
+            if (WebsiteCrawler.isBrokenLink(url)) {
+                System.err.println("ERROR: Cannot connect to URL, please enter a valid URL");
+            }
+        } while (WebsiteCrawler.isBrokenLink(url));
+        return url;
     }
 
     public static void getDepthInput() {
