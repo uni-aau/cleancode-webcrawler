@@ -6,6 +6,8 @@ import java.util.*;
 
 public class Main {
     public static String websiteUrl;
+    public static int urlAmount;
+    public static String[] websiteUrls;
     public static int depthOfRecursiveSearch;
     public static String languageCode;
     public static String outputPath;
@@ -17,11 +19,16 @@ public class Main {
         getUserInput();
         WebsiteCrawler crawler = createCrawler();
         crawler.startCrawling();
+//        crawler.startCrawlingMultipleUrls();
         System.exit(0);
     }
 
     public static WebsiteCrawler createCrawler() {
-        return new WebsiteCrawler(websiteUrl, depthOfRecursiveSearch, languageCode, outputPath);
+        // Todo only for testing
+        websiteUrls = new String[2];
+        websiteUrls[0] = "http://david.jamnig.net/cctest/threads/thread1";
+        websiteUrls[1] = "http://david.jamnig.net/cctest/threads/thread2";
+        return new WebsiteCrawler(websiteUrls, depthOfRecursiveSearch, languageCode, outputPath);
     }
 
     private static void closeScanner() {
@@ -34,11 +41,36 @@ public class Main {
 
     protected static void getUserInput() {
         setupScanner();
+        getAmountOfCrawlingWebsites();
         getWebsiteInput();
         getDepthInput();
         getLanguageInput();
         getOutputFileInput();
         closeScanner();
+    }
+
+    public static void getAmountOfCrawlingWebsites() {
+        boolean value = true;
+        System.out.println("Enter the amount of website urls that should be crawled");
+
+        while (value) {
+            try {
+                value = tryToGetAmountOfCrawlingWebsites();
+            } catch (InputMismatchException e) {
+                System.err.println("ERROR: Please enter a valid number.");
+                inputScanner.nextLine();
+            }
+        }
+        inputScanner.nextLine();
+    }
+
+    public static boolean tryToGetAmountOfCrawlingWebsites() {
+        urlAmount = inputScanner.nextInt();
+        if (urlAmount < 1) {
+            System.err.println("ERROR: Please enter a valid url amount greater than zero!");
+            return true;
+        }
+        return false;
     }
 
     public static void getWebsiteInput() {
