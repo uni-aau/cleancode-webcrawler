@@ -28,7 +28,7 @@ public class Main {
         websiteUrls = new String[2];
         websiteUrls[0] = "http://david.jamnig.net/cctest/threads/thread1";
         websiteUrls[1] = "http://david.jamnig.net/cctest/threads/thread2";
-        return new WebsiteCrawler(websiteUrls, depthOfRecursiveSearch, languageCode, outputPath);
+        return new WebsiteCrawler(websiteUrl, depthOfRecursiveSearch, languageCode, outputPath);
     }
 
     private static void closeScanner() {
