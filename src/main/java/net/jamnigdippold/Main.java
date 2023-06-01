@@ -115,7 +115,7 @@ public class Main {
         while (value) {
             try {
                 System.out.println("Enter the depth of search (how many additional Links should be analyzed)" + currentUrl + "/" + urlAmount);
-                value = tryToGetDepthInput();
+                value = tryToGetCrawlingDepth();
             } catch (InputMismatchException e) {
                 System.err.println("ERROR: Please enter a valid number.");
                 inputScanner.nextLine();
@@ -124,7 +124,7 @@ public class Main {
         inputScanner.nextLine();
     }
 
-    private static boolean tryToGetDepthInput() {
+    private static boolean tryToGetCrawlingDepth() {
         depthOfRecursiveSearch = inputScanner.nextInt();
         if (depthOfRecursiveSearch < 0) {
             System.err.println("ERROR: Please enter a positive number.");
