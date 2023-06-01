@@ -5,8 +5,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.util.*;
 
 public class Main {
+    public static int urlInputAmount;
     public static String websiteUrl;
-    public static int urlAmount;
     public static String[] websiteUrls;
     public static int depthOfRecursiveSearch;
     public static int[] depthsOfRecursiveSearch;
@@ -67,8 +67,8 @@ public class Main {
     }
 
     public static boolean tryToGetAmountOfCrawlingWebsites() {
-        urlAmount = inputScanner.nextInt();
-        if (urlAmount < 1) {
+        urlInputAmount = inputScanner.nextInt();
+        if (urlInputAmount < 1) {
             System.err.println("ERROR: Please enter a valid url amount greater than zero!");
             return true;
         }
@@ -76,10 +76,10 @@ public class Main {
     }
 
     public static void getMultipleWebsiteUrlInputs() {
-        websiteUrls = new String[urlAmount];
+        websiteUrls = new String[urlInputAmount];
         int currentUrl = 0;
 
-        while (currentUrl < urlAmount) {
+        while (currentUrl < urlInputAmount) {
             String url = getInputUrl(currentUrl + 1);
             websiteUrls[currentUrl] = url;
             currentUrl++;
@@ -87,7 +87,7 @@ public class Main {
     }
 
     public static String getInputUrl(int currentUrl) {
-        System.out.println("Enter the website URL that should be crawled " + currentUrl + "/" + urlAmount);
+        System.out.println("Enter the website URL that should be crawled " + currentUrl + "/" + urlInputAmount);
         String url;
         do {
             url = inputScanner.nextLine();
@@ -99,10 +99,10 @@ public class Main {
     }
 
     public static void getMultipleCrawlingDepthInputs() {
-        depthsOfRecursiveSearch = new int[urlAmount];
+        depthsOfRecursiveSearch = new int[urlInputAmount];
         int currentUrl = 0;
 
-        while (currentUrl < urlAmount) {
+        while (currentUrl < urlInputAmount) {
             getCrawlingDepth(currentUrl + 1);
             depthsOfRecursiveSearch[currentUrl] = depthOfRecursiveSearch;
             currentUrl++;
@@ -110,7 +110,7 @@ public class Main {
     }
 
     public static void getCrawlingDepth(int currentUrl) {
-        System.out.println("Enter the depth of search (how many additional Links should be analyzed) " + currentUrl + "/" + urlAmount);
+        System.out.println("Enter the depth of search (how many additional Links should be analyzed) " + currentUrl + "/" + urlInputAmount);
         boolean value = true;
 
         while (value) {
@@ -135,10 +135,10 @@ public class Main {
     }
 
     public static void getMultipleLanguageInputs() {
-        languageCodes = new String[urlAmount];
+        languageCodes = new String[urlInputAmount];
         int currentUrl = 0;
 
-        while (currentUrl < urlAmount) {
+        while (currentUrl < urlInputAmount) {
             getLanguageCode(currentUrl + 1);
             languageCodes[currentUrl] = languageCode;
             currentUrl++;
@@ -146,7 +146,7 @@ public class Main {
     }
 
     public static void getLanguageCode(int currentUrl) {
-        System.out.println("Please enter the language code for the language into which the headers should be translated [e.g. de] " + currentUrl + "/" + urlAmount);
+        System.out.println("Please enter the language code for the language into which the headers should be translated [e.g. de] " + currentUrl + "/" + urlInputAmount);
         languageCode = inputScanner.nextLine();
 
         while (!isValidLanguageCode(languageCode)) {
