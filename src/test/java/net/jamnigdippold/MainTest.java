@@ -253,7 +253,7 @@ class MainTest {
     void testGetDepthInput() {
         mockInputScanner("3\n");
 
-        Main.getDepthInput();
+        Main.getMultipleCrawlingDepthInputs();
 
         assertTestGetDepthInput();
     }
@@ -268,7 +268,7 @@ class MainTest {
     void testGetDepthInputError() {
         mockInputScanner("Number\n-1\n-2\n-10\n0\n");
 
-        Main.getDepthInput();
+        Main.getMultipleCrawlingDepthInputs();
 
         assertTestGetDepthInputError();
     }
@@ -286,7 +286,7 @@ class MainTest {
     void testGetWebsiteInput() {
         setUpTestGetWebsiteInput("https://example.com\n");
 
-        Main.getWebsiteInput();
+        Main.getMultipleWebsiteUrlInputs();
 
         assertTestGetWebsiteInput();
     }
@@ -302,7 +302,7 @@ class MainTest {
     void testGetWebsiteInputError() {
         setUpTestGetWebsiteInput("wrong URL format\nhttps://www.notARealWebsite.com\nhttps://example.com\n");
 
-        Main.getWebsiteInput();
+        Main.getMultipleWebsiteUrlInputs();
 
         assertTestGetWebsiteInputError();
     }
