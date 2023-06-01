@@ -9,7 +9,9 @@ public class Main {
     public static int urlAmount;
     public static String[] websiteUrls;
     public static int depthOfRecursiveSearch;
+    public static int[] depthOfRecursiveSearches;
     public static String languageCode;
+    public static String[] languageCodes;
     public static String outputPath;
     public static Scanner inputScanner;
     public static JFileChooser fileChooser;
@@ -42,8 +44,8 @@ public class Main {
     protected static void getUserInput() {
         setupScanner();
         getAmountOfCrawlingWebsites();
-        getWebsiteInput();
-        getDepthInput();
+        getMultipleWebsiteUrlInputs();
+        getMultipleCrawlingDepthInputs();
         getLanguageInput();
         getOutputFileInput();
         closeScanner();
@@ -73,7 +75,7 @@ public class Main {
         return false;
     }
 
-    public static void getWebsiteInput() {
+    public static void getMultipleWebsiteUrlInputs() {
         websiteUrls = new String[urlAmount];
         int currentUrl = 0;
 
@@ -96,12 +98,23 @@ public class Main {
         return url;
     }
 
-    public static void getDepthInput() {
+    public static void getMultipleCrawlingDepthInputs() {
+        depthOfRecursiveSearches = new int[urlAmount];
+        int currentUrl = 0;
+
+        while (currentUrl < urlAmount) {
+            getCrawlingDepth(currentUrl + 1);
+            depthOfRecursiveSearches[currentUrl] = depthOfRecursiveSearch;
+            currentUrl++;
+        }
+    }
+
+    public static void getCrawlingDepth(int currentUrl) {
         boolean value = true;
-        System.out.println("Enter the depth of search (how many additional Links should be analyzed)");
 
         while (value) {
             try {
+                System.out.println("Enter the depth of search (how many additional Links should be analyzed)" + currentUrl + "/" + urlAmount);
                 value = tryToGetDepthInput();
             } catch (InputMismatchException e) {
                 System.err.println("ERROR: Please enter a valid number.");
