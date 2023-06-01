@@ -223,7 +223,7 @@ class MainTest {
     void testGetLanguageInput() {
         mockInputScanner("en");
 
-        Main.getLanguageInput();
+        Main.getMultipleLanguageInputs();
 
         assertTestGetLanguage();
     }
@@ -238,7 +238,7 @@ class MainTest {
     void testGetLanguageInputError() {
         mockInputScanner("Not a language code\nef\nen");
 
-        Main.getLanguageInput();
+        Main.getMultipleLanguageInputs();
 
         assertTestGetLanguageError();
     }

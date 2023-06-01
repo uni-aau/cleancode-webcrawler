@@ -46,7 +46,7 @@ public class Main {
         getAmountOfCrawlingWebsites();
         getMultipleWebsiteUrlInputs();
         getMultipleCrawlingDepthInputs();
-        getLanguageInput();
+        getMultipleLanguageInputs();
         getOutputFileInput();
         closeScanner();
     }
@@ -134,8 +134,19 @@ public class Main {
         return true;
     }
 
-    public static void getLanguageInput() {
-        System.out.println("Please enter the language code for the language into which the headers should be translated [e.g. de]");
+    public static void getMultipleLanguageInputs() {
+        languageCodes = new String[urlAmount];
+        int currentUrl = 0;
+
+        while (currentUrl < urlAmount) {
+            getLanguageCode(currentUrl + 1);
+            languageCodes[currentUrl] = languageCode;
+            currentUrl++;
+        }
+    }
+
+    public static void getLanguageCode(int currentUrl) {
+        System.out.println("Please enter the language code for the language into which the headers should be translated [e.g. de] " + currentUrl + "/" + urlAmount);
         languageCode = inputScanner.nextLine();
 
         while (!isValidLanguageCode(languageCode)) {
