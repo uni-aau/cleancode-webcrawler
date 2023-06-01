@@ -87,9 +87,9 @@ public class Main {
     }
 
     public static String getInputUrl(int currentUrl) {
+        System.out.println("Enter the website URL that should be crawled " + currentUrl + "/" + urlAmount);
         String url;
         do {
-            System.out.println("Enter the website URL that should be crawled " + currentUrl + "/" + urlAmount);
             url = inputScanner.nextLine();
             if (WebsiteCrawler.isBrokenLink(url)) {
                 System.err.println("ERROR: Cannot connect to URL, please enter a valid URL");
@@ -110,11 +110,11 @@ public class Main {
     }
 
     public static void getCrawlingDepth(int currentUrl) {
+        System.out.println("Enter the depth of search (how many additional Links should be analyzed) " + currentUrl + "/" + urlAmount);
         boolean value = true;
 
         while (value) {
             try {
-                System.out.println("Enter the depth of search (how many additional Links should be analyzed)" + currentUrl + "/" + urlAmount);
                 value = tryToGetCrawlingDepth();
             } catch (InputMismatchException e) {
                 System.err.println("ERROR: Please enter a valid number.");
