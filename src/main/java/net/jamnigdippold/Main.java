@@ -9,7 +9,7 @@ public class Main {
     public static int urlAmount;
     public static String[] websiteUrls;
     public static int depthOfRecursiveSearch;
-    public static int[] depthOfRecursiveSearches;
+    public static int[] depthsOfRecursiveSearch;
     public static String languageCode;
     public static String[] languageCodes;
     public static String outputPath;
@@ -99,12 +99,12 @@ public class Main {
     }
 
     public static void getMultipleCrawlingDepthInputs() {
-        depthOfRecursiveSearches = new int[urlAmount];
+        depthsOfRecursiveSearch = new int[urlAmount];
         int currentUrl = 0;
 
         while (currentUrl < urlAmount) {
             getCrawlingDepth(currentUrl + 1);
-            depthOfRecursiveSearches[currentUrl] = depthOfRecursiveSearch;
+            depthsOfRecursiveSearch[currentUrl] = depthOfRecursiveSearch;
             currentUrl++;
         }
     }
