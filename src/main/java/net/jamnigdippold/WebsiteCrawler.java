@@ -51,9 +51,12 @@ public class WebsiteCrawler extends Thread {
 
     @Override
     public void run() {
-        if (!isBrokenLink(websiteUrl))
-            startCrawling();
-        else
+        if (!isBrokenLink(websiteUrl)) {
+            if (currentDepthOfRecursiveSearch > maxDepthOfRecursiveSearch)
+                outputCrawledLink(websiteUrl, false);
+            else
+                startCrawling();
+        } else
             outputCrawledLink(websiteUrl, true);
     }
 
@@ -70,10 +73,10 @@ public class WebsiteCrawler extends Thread {
 
     protected void outputInput() {
         if (currentDepthOfRecursiveSearch == 0) {
-            output.append("input: <a>" + websiteUrl + "</a>\n");
-            output.append("<br>depth: " + maxDepthOfRecursiveSearch + "\n");
-            output.append("<br>source language: " + sourceLanguage + "\n");
-            output.append("<br>Target language: " + targetLanguage + "\n");
+            output.append("input: <a>").append(websiteUrl).append("</a>\n");
+            output.append("<br>depth: ").append(maxDepthOfRecursiveSearch).append("\n");
+            output.append("<br>source language: ").append(sourceLanguage).append("\n");
+            output.append("<br>Target language: ").append(targetLanguage).append("\n");
             output.append("<br>summary:\n");
         } else {
             outputCrawledLink(websiteUrl, false);
@@ -133,12 +136,10 @@ public class WebsiteCrawler extends Thread {
         return absoluteUrl;
     }
 
-    private void startNewCrawler(String crawledLink) {
-        if (currentDepthOfRecursiveSearch < maxDepthOfRecursiveSearch) {
-            WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1);
-            recursiveCrawler.start();
-            recursiveCrawlers.add(recursiveCrawler);
-        }
+    protected void startNewCrawler(String crawledLink) {
+        WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1);
+        recursiveCrawler.start();
+        recursiveCrawlers.add(recursiveCrawler);
     }
 
     protected void initializeTranslator() {
@@ -257,5 +258,9 @@ public class WebsiteCrawler extends Thread {
 
     public String getOutput() {
         return output.toString();
+    }
+
+    public void setUpOutput() {
+        output = new StringBuilder();
     }
 }

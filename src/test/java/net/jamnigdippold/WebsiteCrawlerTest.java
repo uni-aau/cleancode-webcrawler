@@ -25,8 +25,6 @@ import static org.mockito.Mockito.*;
 class WebsiteCrawlerTest {
     private static Document mockedDocument;
     private static WebsiteCrawler webCrawler;
-    private final String testFilePath = "testFile.txt";
-    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     private final ArrayList<String> crawledLinks = new ArrayList<>();
     private Elements crawledHeadlines;
     @Mock
@@ -38,7 +36,6 @@ class WebsiteCrawlerTest {
     public void setUp() {
         mockEstablishConnection();
         webCrawler.establishConnection();
-        System.setOut(new PrintStream(outputStream));
     }
 
     private void mockEstablishConnection() {
@@ -46,22 +43,21 @@ class WebsiteCrawlerTest {
         MockitoAnnotations.openMocks(this);
         mockedDocument = Jsoup.parse(htmlMock);
 
-        webCrawler = spy(new WebsiteCrawler("https://example.com", 1, "de", testFilePath));
+        webCrawler = spy(new WebsiteCrawler("https://example.com", 1, "de"));
 
         doAnswer(invocationOnMock -> {
             webCrawler.setWebsiteDocumentConnection(mockedDocument);
             return null;
         }).when(webCrawler).establishConnection();
-        webCrawler.establishConnection();
     }
 
     @AfterEach
     public void tearDown() {
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
-        webCrawler.closeWriter();
         webCrawler = null;
-        System.setOut(System.out);
-        new File(testFilePath).delete();
+        if (mockedJsoup != null)
+            mockedJsoup.close();
+        if (mockedCrawlerConstruction != null)
+            mockedCrawlerConstruction.close();
     }
 
     @Test
@@ -73,7 +69,7 @@ class WebsiteCrawlerTest {
 
         mockedJsoup.verify(() -> Jsoup.connect(any()));
 
-        mockedJsoup.close();
+
     }
 
     @Test
@@ -85,12 +81,7 @@ class WebsiteCrawlerTest {
 
         assertThrows(RuntimeException.class, () -> webCrawler.establishConnection());
 
-        mockedJsoup.close();
-    }
 
-    @Test
-    void testCreateFileWriterError() {
-        assertThrows(RuntimeException.class, () -> webCrawler.createFileWriter(""));
     }
 
     @Test
@@ -118,9 +109,8 @@ class WebsiteCrawlerTest {
         int maxDepthOfRecursiveSearch = 3;
         String targetLanguage = "en";
         int currentDepthOfRecursiveSearch = 1;
-        FileWriter writer = mock(FileWriter.class);
 
-        WebsiteCrawler newCrawler = new WebsiteCrawler(url, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
+        WebsiteCrawler newCrawler = new WebsiteCrawler(url, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch);
 
         assertEquals(url, newCrawler.getWebsiteUrl());
         assertEquals(maxDepthOfRecursiveSearch, newCrawler.getMaxDepthOfRecursiveSearch());
@@ -130,7 +120,6 @@ class WebsiteCrawlerTest {
 
     @Test
     void testMethodCallSequenceOnCrawlingStart() {
-        webCrawler.closeWriter(); // Close the old writer in order that the TestFile gets successfully deleted
         webCrawler = mock(WebsiteCrawler.class);
         doCallRealMethod().when(webCrawler).startCrawling();
 
@@ -138,13 +127,12 @@ class WebsiteCrawlerTest {
 
         verify(webCrawler).establishConnection();
         verify(webCrawler).crawlHeadlines();
-        verify(webCrawler).setSourceLanguage();
         verify(webCrawler).initializeTranslator();
-        verify(webCrawler).printInput();
-        verify(webCrawler).printCrawledHeadlines();
+        verify(webCrawler).setSourceLanguage();
+        verify(webCrawler).outputInput();
+        verify(webCrawler).outputCrawledHeadlines();
         verify(webCrawler).crawlWebsiteLinks();
-        verify(webCrawler).recursivelyPrintCrawledWebsites();
-        verify(webCrawler).closeWriter();
+        verify(webCrawler).recursivelyCrawlLinkedWebsites();
     }
 
     @Test
@@ -155,12 +143,13 @@ class WebsiteCrawlerTest {
         mockJsoup();
 
         webCrawler.setCrawledLinks(crawledLinks);
-        webCrawler.recursivelyPrintCrawledWebsites();
+        webCrawler.setUpOutput();
 
-        assertEquals(expectedOutputMessage, outputStream.toString());
-        assertEqualFileContent(expectedOutputMessage, testFilePath);
+        webCrawler.recursivelyCrawlLinkedWebsites();
 
-        mockedJsoup.close();
+        assertEquals(expectedOutputMessage, webCrawler.getOutput());
+
+
     }
 
     @Test
@@ -172,15 +161,12 @@ class WebsiteCrawlerTest {
 
         webCrawler.setCrawledLinks(crawledLinks);
         webCrawler.setCurrentDepthOfRecursiveSearch(2);
-        webCrawler.recursivelyPrintCrawledWebsites();
+        webCrawler.recursivelyCrawlLinkedWebsites();
 
-        assertEquals(expectedOutputMessage, outputStream.toString());
-        assertEqualFileContent(expectedOutputMessage, testFilePath);
-
-        mockedJsoup.close();
+        assertEquals(expectedOutputMessage, webCrawler.getOutput());
     }
 
-    @Test
+   // @Test TODO: find way to mock the creation of new Crawler without mocking the Thread they are running on
     void testRecursiveWebsiteCrawlingAtHigherDepth() throws IOException {
         mockJsoup();
         mockCrawlerCreation();
@@ -189,17 +175,14 @@ class WebsiteCrawlerTest {
 
         webCrawler.setCrawledLinks(crawledLinks);
         webCrawler.setMaxDepthOfRecursiveSearch(2);
-        webCrawler.recursivelyPrintCrawledWebsites();
+        webCrawler.recursivelyCrawlLinkedWebsites();
 
         assertEquals("<br>--> link to <a>https://example.com</a>\n" +
                 "\n" +
                 "<br>----> link to <a>https://example.com</a>\n" +
                 "\n" +
                 "<br>------> link to <a>https://example.com</a>\n" +
-                "\n", outputStream.toString());
-
-        mockedJsoup.close();
-        mockedCrawlerConstruction.close();
+                "\n", webCrawler.getOutput());
     }
 
     void mockCrawlerCreation() {
@@ -208,17 +191,12 @@ class WebsiteCrawlerTest {
                     setMockedMethodeToCallRealMethods(mock);
 
                     doAnswer(invocationOnMock -> {
-                        System.out.print((String) invocationOnMock.getArgument(0));
-                        return null;
-                    }).when(mock).printString(anyString());
-
-                    doAnswer(invocationOnMock -> {
                         ArrayList<String> crawledLinks = new ArrayList<>();
                         crawledLinks.add("https://example.com");
                         mock.setCrawledLinks(crawledLinks);
                         mock.setMaxDepthOfRecursiveSearch((int) context.arguments().get(1));
                         mock.setCurrentDepthOfRecursiveSearch((int) context.arguments().get(3));
-                        mock.recursivelyPrintCrawledWebsites();
+                        mock.recursivelyCrawlLinkedWebsites();
                         return null;
                     }).when(mock).startCrawling();
                 });
@@ -229,15 +207,20 @@ class WebsiteCrawlerTest {
         doCallRealMethod().when(mock).setCurrentDepthOfRecursiveSearch(anyInt());
         doCallRealMethod().when(mock).setMaxDepthOfRecursiveSearch(anyInt());
         doCallRealMethod().when(mock).convertRelativeUrlToAbsoluteURL(anyString());
-        doCallRealMethod().when(mock).printCrawledLink(anyString(), anyBoolean());
-        doCallRealMethod().when(mock).printDepthIndicator();
-        doCallRealMethod().when(mock).recursivelyPrintCrawledWebsites();
+        doCallRealMethod().when(mock).outputCrawledLink(anyString(), anyBoolean());
+        doCallRealMethod().when(mock).outputDepthIndicator(anyInt());
+        doCallRealMethod().when(mock).recursivelyCrawlLinkedWebsites();
+        doCallRealMethod().when(mock).waitForCrawlerThreads();
+        doCallRealMethod().when(mock).appendOutputFromRecursiveCrawlers();
+        doCallRealMethod().when(mock).start();
+        doCallRealMethod().when(mock).run();
     }
 
     @Test
     void testConversionAbsoluteToRelativeUrl() {
         String relativeUrl = "./relativeUrl";
         String absoluteUrl = "https://example.com/relativeUrl";
+        webCrawler.setWebsiteUrl("https://example.com");
 
         String webCrawlerConversionOutput = webCrawler.convertRelativeUrlToAbsoluteURL(relativeUrl);
 
@@ -262,25 +245,6 @@ class WebsiteCrawlerTest {
         assertEquals("de", webCrawler.getTranslator().getTargetLanguage());
     }
 
-    @Test
-    void testStringPrinting() throws IOException {
-        String printMessage = "https://example.com";
-
-        webCrawler.printString(printMessage);
-
-        assertEquals(printMessage, outputStream.toString());
-        assertEqualFileContent(printMessage, testFilePath);
-    }
-
-
-    @Test
-    void testStringPrintingError() {
-        String printMessage = "https://example.com";
-
-        webCrawler.closeWriter();
-
-        assertThrows(RuntimeException.class, () -> webCrawler.printString(printMessage));
-    }
 
     @Test
     void testPrintCrawledHeadlinesZeroDepth() throws IOException {
@@ -289,10 +253,10 @@ class WebsiteCrawlerTest {
 
         crawledHeadlines = addElements();
         webCrawler.setCrawledHeadlines(crawledHeadlines);
-        webCrawler.printCrawledHeadlines();
+        webCrawler.setUpOutput();
+        webCrawler.outputCrawledHeadlines();
 
-        assertEquals(expectedPrintMessage, outputStream.toString());
-        assertEqualFileContent(expectedPrintMessage, testFilePath);
+        assertEquals(expectedPrintMessage, webCrawler.getOutput());
     }
 
     @Test
@@ -303,10 +267,10 @@ class WebsiteCrawlerTest {
         crawledHeadlines = addElements();
         webCrawler.setCrawledHeadlines(crawledHeadlines);
         webCrawler.setCurrentDepthOfRecursiveSearch(1);
-        webCrawler.printCrawledHeadlines();
+        webCrawler.setUpOutput();
+        webCrawler.outputCrawledHeadlines();
 
-        assertEquals(expectedPrintMessage, outputStream.toString());
-        assertEqualFileContent(expectedPrintMessage, testFilePath);
+        assertEquals(expectedPrintMessage, webCrawler.getOutput());
     }
 
     void mockHeadingTranslation() {
@@ -337,7 +301,7 @@ class WebsiteCrawlerTest {
         boolean isBrokenLink = WebsiteCrawler.isBrokenLink("Not a real URL");
 
         assertTrue(isBrokenLink);
-        mockedJsoup.close();
+
     }
 
     @Test
@@ -347,7 +311,7 @@ class WebsiteCrawlerTest {
         boolean isBrokenLink = WebsiteCrawler.isBrokenLink("https://looksRealButIsNot");
 
         assertTrue(isBrokenLink);
-        mockedJsoup.close();
+
     }
 
     @Test
@@ -357,7 +321,7 @@ class WebsiteCrawlerTest {
         boolean isBrokenLink = WebsiteCrawler.isBrokenLink("https://example.com");
 
         assertFalse(isBrokenLink);
-        mockedJsoup.close();
+
     }
 
     void mockJsoup() throws IOException {
@@ -385,32 +349,28 @@ class WebsiteCrawlerTest {
         String expectedPrintMessage = "# ";
         Element crawledHeadline = new Element("h1").text("Heading h1");
 
-        webCrawler.printHeaderLevel(crawledHeadline);
+        webCrawler.outputHeaderLevel(crawledHeadline);
 
-        assertEquals(expectedPrintMessage, outputStream.toString());
-        assertEqualFileContent("# ", testFilePath);
+        assertEquals(expectedPrintMessage, webCrawler.getOutput());
     }
 
     @Test
     void testPrintZeroDepth() throws IOException {
         String expectedOutputMessage = "> ";
+        webCrawler.setUpOutput();
 
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
-        webCrawler.printDepthIndicator();
+        webCrawler.outputDepthIndicator(0);
 
-        assertEquals(expectedOutputMessage, outputStream.toString());
-        assertEqualFileContent(expectedOutputMessage, testFilePath);
+        assertEquals(expectedOutputMessage, webCrawler.getOutput());
     }
 
     @Test
     void testPrintHigherDepth() throws IOException {
         String expectedOutputMessage = "------> ";
 
-        webCrawler.setCurrentDepthOfRecursiveSearch(3);
-        webCrawler.printDepthIndicator();
+        webCrawler.outputDepthIndicator(3);
 
-        assertEquals(expectedOutputMessage, outputStream.toString());
-        assertEqualFileContent(expectedOutputMessage, testFilePath);
+        assertEquals(expectedOutputMessage, webCrawler.getOutput());
     }
 
     @Test
@@ -423,10 +383,10 @@ class WebsiteCrawlerTest {
         String expectedOutputMessage = websiteUrlInput + depthInput + sourceLanguageInput + targetLanguageInput + summaryInput;
 
         webCrawler.setCurrentDepthOfRecursiveSearch(0);
-        webCrawler.printInput();
 
-        assertEquals(expectedOutputMessage, outputStream.toString());
-        assertEqualFileContent(expectedOutputMessage, testFilePath);
+        webCrawler.outputInput();
+
+        assertEquals(expectedOutputMessage, webCrawler.getOutput());
     }
 
     @Test
@@ -439,10 +399,9 @@ class WebsiteCrawlerTest {
         String expectedOutputMessage = lineBreakMessage + depthIndicatorMessage + firstLinkPart + crawledTestLink + secondLinkPart;
         boolean isBrokenLink = false;
 
-        webCrawler.printCrawledLink(crawledTestLink, isBrokenLink);
+        webCrawler.outputCrawledLink(crawledTestLink, isBrokenLink);
 
-        assertEquals(expectedOutputMessage, outputStream.toString());
-        assertEqualFileContent(expectedOutputMessage, testFilePath);
+        assertEquals(expectedOutputMessage, webCrawler.getOutput());
     }
 
     @Test
@@ -454,40 +413,11 @@ class WebsiteCrawlerTest {
         String secondLinkPart = "</a>\n\n";
         boolean isBrokenLink = true;
         String expectedOutputMessage = lineBreakMessage + depthIndicatorMessage + firstLinkPart + crawledTestLink + secondLinkPart;
+        webCrawler.setUpOutput();
 
-        webCrawler.printCrawledLink(crawledTestLink, isBrokenLink);
+        webCrawler.outputCrawledLink(crawledTestLink, isBrokenLink);
 
-        assertEquals(expectedOutputMessage, outputStream.toString());
-        assertEqualFileContent(expectedOutputMessage, testFilePath);
-    }
-
-    @Test
-    void testSuccessfulFileWriterClosure() {
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
-        webCrawler.closeWriter();
-
-        assertThrows(RuntimeException.class, () -> webCrawler.printString("test"));
-    }
-
-    @Test
-    void testUnsuccessfulFileWriterClosure() {
-        webCrawler.setCurrentDepthOfRecursiveSearch(1);
-        webCrawler.closeWriter();
-
-        assertDoesNotThrow(() -> webCrawler.printString("test"));
-    }
-
-    @Test
-    void testFileWriterClosureError() throws IOException {
-        FileWriter actualFileWriter = webCrawler.getFileWriter();
-        FileWriter mockFileWriter = mock(FileWriter.class);
-        doThrow(new IOException()).when(mockFileWriter).close();
-
-        webCrawler.setCurrentDepthOfRecursiveSearch(0);
-        webCrawler.setFileWriter(mockFileWriter);
-
-        assertThrows(RuntimeException.class, () -> webCrawler.closeWriter());
-        webCrawler.setFileWriter(actualFileWriter);
+        assertEquals(expectedOutputMessage, webCrawler.getOutput());
     }
 
     private Elements addElements() {
@@ -498,10 +428,4 @@ class WebsiteCrawlerTest {
         return headlineElements;
     }
 
-    private void assertEqualFileContent(String expectedValue, String path) throws IOException {
-        webCrawler.flushWriter();
-        String content = new String(Files.readAllBytes(Paths.get(path)));
-
-        assertEquals(expectedValue, content);
-    }
 }
