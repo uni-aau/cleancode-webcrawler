@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class TranslatorNew implements Translator {
     private OkHttpClient client = new OkHttpClient();
-    private String sourceLanguage;
+    private String sourceLanguage = "de";
     private String targetLanguage;
 
 
@@ -20,6 +20,7 @@ public class TranslatorNew implements Translator {
     @Override
     public String translate(String input) {
         setSourceLanguage(input);
+        System.out.println("SourceLanguage? " + sourceLanguage );
         return getTranslatedHeadline(input);
     }
 
