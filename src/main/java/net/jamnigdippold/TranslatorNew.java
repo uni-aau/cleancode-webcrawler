@@ -7,9 +7,13 @@ import okhttp3.*;
 import java.io.IOException;
 
 public class TranslatorNew implements Translator {
-    private OkHttpClient client = new OkHttpClient();
+    private HttpClient httpClient;
     private String sourceLanguage = "auto";
     private String targetLanguage;
+
+    public TranslatorNew() {
+        this.httpClient = new OkHttpWrapper();
+    }
 
 
     @Override
@@ -54,7 +58,7 @@ public class TranslatorNew implements Translator {
 
     protected Response executeTranslationApiRequest(Request translationApiRequest) {
         try {
-            return client.newCall(translationApiRequest).execute();
+            return httpClient.executeRequest(translationApiRequest);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -139,6 +143,6 @@ public class TranslatorNew implements Translator {
     }
 
     public void setClient(OkHttpClient client) {
-        this.client = client;
+        this.httpClient = httpClient;
     }
 }
