@@ -47,7 +47,7 @@ public class TextTranslator implements Translator {
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
                 .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", "134b47f9bamsh3cb8baad7211ab0p1dc733jsn73a6d26ba2d1") // TODO
+                .addHeader("X-RapidAPI-Key", apiKey)
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
     }
@@ -138,9 +138,9 @@ public class TextTranslator implements Translator {
         return sourceLanguage;
     }
 
-//    public String getTargetLanguage() { // TODO necessary?
-//        return targetLanguage;
-//    }
+    public String getTargetLanguage() { // TODO necessary?
+        return targetLanguage;
+    }
 
     public void setClient(HttpClient client) {
         this.httpClient = client;
