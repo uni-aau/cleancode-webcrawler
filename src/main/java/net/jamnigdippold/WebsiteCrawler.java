@@ -17,10 +17,10 @@ public class WebsiteCrawler {
     private Document websiteDocumentConnection;
     private Elements crawledHeadlines;
     private List<String> crawledLinks;
-    private String sourceLanguage;
+    private String sourceLanguage = "auto";
     private String targetLanguage;
     private FileWriter fileWriter;
-    private TextTranslator translator;
+    private Translator translator;
 
     public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
         createFileWriter(outputPath);
@@ -61,7 +61,7 @@ public class WebsiteCrawler {
         establishConnection();
         crawlHeadlines();
         initializeTranslator();
-        setSourceLanguage();
+//        setSourceLanguage();
         printInput();
         printCrawledHeadlines();
         crawlWebsiteLinks();
@@ -129,13 +129,14 @@ public class WebsiteCrawler {
     }
 
     protected void initializeTranslator() {
-        translator = new TextTranslator(targetLanguage);
+        translator = new TranslatorNew();
+        translator.setTargetLanguage(targetLanguage);
     }
 
-    protected void setSourceLanguage() {
+/*    protected void setSourceLanguage() {
         translator.setTranslationSourceLanguage(crawledHeadlines);
         sourceLanguage = translator.getSourceLanguage();
-    }
+    }*/
 
     protected void printCrawledHeadlines() {
         for (Element crawledHeadline : crawledHeadlines) {
@@ -143,7 +144,7 @@ public class WebsiteCrawler {
             if (currentDepthOfRecursiveSearch > 0) {
                 printDepthIndicator();
             }
-            printString(translator.getTranslatedHeadline(crawledHeadline.text()) + "\n");
+            printString(translator.translate(crawledHeadline.text()) + "\n");
         }
         printString("\n");
     }
@@ -260,11 +261,11 @@ public class WebsiteCrawler {
         this.targetLanguage = targetLanguage;
     }
 
-    public void setTranslator(TextTranslator translator) {
+    public void setTranslator(Translator translator) {
         this.translator = translator;
     }
 
-    public TextTranslator getTranslator() {
+    public Translator getTranslator() {
         return translator;
     }
 
