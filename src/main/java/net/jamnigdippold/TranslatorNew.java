@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class TranslatorNew implements Translator {
     private OkHttpClient client = new OkHttpClient();
-    private String sourceLanguage = "de";
+    private String sourceLanguage = "auto";
     private String targetLanguage;
 
 
@@ -20,12 +20,11 @@ public class TranslatorNew implements Translator {
     @Override
     public String translate(String input) {
         setSourceLanguage(input);
-        System.out.println("SourceLanguage? " + sourceLanguage );
         return getTranslatedHeadline(input);
     }
 
     protected void setSourceLanguage(String headlineText) {
-        if (sourceLanguage == null) {
+        if (sourceLanguage.equals("auto")) {
             sourceLanguage = getLanguageCodeFromHeadline(headlineText);
         }
     }
@@ -44,7 +43,7 @@ public class TranslatorNew implements Translator {
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
                 .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", apiKey)
+                .addHeader("X-RapidAPI-Key", "134b47f9bamsh3cb8baad7211ab0p1dc733jsn73a6d26ba2d1") // TODO
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
     }
