@@ -3,24 +3,33 @@ package net.jamnigdippold;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
-import org.jsoup.select.Elements;
 
 import java.io.IOException;
 
-public class TextTranslator {
-    private OkHttpClient client = new OkHttpClient();
-    private String sourceLanguage;
-    private final String targetLanguage;
+public class TextTranslator implements Translator {
+    private HttpClient httpClient;
+    private String sourceLanguage = "auto";
+    private String targetLanguage;
 
-    public TextTranslator(String targetLanguage) {
-        this.sourceLanguage = "auto";
+    public TextTranslator() {
+        this.httpClient = new OkHttpWrapper();
+    }
+
+
+    @Override
+    public void setTargetLanguage(String targetLanguage) {
         this.targetLanguage = targetLanguage;
     }
 
-    protected void setTranslationSourceLanguage(Elements crawledHeadlines) {
-        if (!crawledHeadlines.isEmpty()) {
-            String headline = crawledHeadlines.get(0).text();
-            sourceLanguage = getLanguageCodeFromHeadline(headline);
+    @Override
+    public String translate(String input) {
+        setSourceLanguage(input);
+        return getTranslatedHeadline(input);
+    }
+
+    protected void setSourceLanguage(String headlineText) {
+        if (sourceLanguage.equals("auto")) {
+            sourceLanguage = getLanguageCodeFromHeadline(headlineText);
         }
     }
 
@@ -38,7 +47,7 @@ public class TextTranslator {
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
                 .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", apiKey)
+                .addHeader("X-RapidAPI-Key", "134b47f9bamsh3cb8baad7211ab0p1dc733jsn73a6d26ba2d1") // TODO
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
     }
@@ -49,7 +58,7 @@ public class TextTranslator {
 
     protected Response executeTranslationApiRequest(Request translationApiRequest) {
         try {
-            return client.newCall(translationApiRequest).execute();
+            return httpClient.executeRequest(translationApiRequest);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -133,7 +142,7 @@ public class TextTranslator {
         return targetLanguage;
     }
 
-    public void setClient(OkHttpClient client) {
-        this.client = client;
+    public void setClient(HttpClient client) {
+        this.httpClient = client;
     }
 }

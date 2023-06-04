@@ -129,7 +129,7 @@ public class WebsiteCrawler {
     }
 
     protected void initializeTranslator() {
-        translator = new TranslatorNew();
+        translator = new TextTranslator();
         translator.setTargetLanguage(targetLanguage);
     }
 
