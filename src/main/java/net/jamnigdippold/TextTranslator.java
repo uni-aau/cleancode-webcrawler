@@ -28,7 +28,7 @@ public class TextTranslator implements Translator {
     }
 
     protected void setSourceLanguage(String headlineText) {
-        if (sourceLanguage.equals("auto")) {
+        if (sourceLanguage.equals("auto") && !headlineText.equals("")) {
             sourceLanguage = getLanguageCodeFromHeadline(headlineText);
         }
     }
@@ -138,9 +138,9 @@ public class TextTranslator implements Translator {
         return sourceLanguage;
     }
 
-    public String getTargetLanguage() {
-        return targetLanguage;
-    }
+//    public String getTargetLanguage() { // TODO necessary?
+//        return targetLanguage;
+//    }
 
     public void setClient(HttpClient client) {
         this.httpClient = client;

@@ -21,30 +21,32 @@ class TextTranslatorTest {
     @Mock
     Request mockedRequest;
     @Mock
-    OkHttpClient mockedClient;
+    OkHttpWrapper mockedClient;
     @Mock
     Response mockedResponse;
     @Mock
     ResponseBody mockedResponseBody;
-    @Mock
-    Call mockedCall;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        translator = spy(new TextTranslator("de"));
+        translator = spy(new TextTranslator());
+        translator.setTargetLanguage("de");
     }
+
+    // Todo test translate()
 
 
     @Test
     void testCorrectSettingOfSourceLanguageEnglish() throws IOException {
         String expectedSourceLanguage = "en";
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
-        Elements crawledHeadlines = addElements();
+        String headlineText = "Heading h1";
+
         mockResponseExtraction(expectedResponseOutput);
         doReturn(mockedResponse).when(translator).executeAPIRequest("Heading h1");
 
-        translator.setTranslationSourceLanguage(crawledHeadlines);
+        translator.setSourceLanguage(headlineText);
 
         assertEquals(expectedSourceLanguage, translator.getSourceLanguage());
     }
@@ -52,11 +54,12 @@ class TextTranslatorTest {
     void testSetSourceLanguageNoHeadlines() throws IOException {
         String expectedSourceLanguage = "auto";
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
-        Elements crawledHeadlines = new Elements();
+        String headlineText = "";
+
         mockResponseExtraction(expectedResponseOutput);
         doReturn(mockedResponse).when(translator).executeAPIRequest("Heading h1");
 
-        translator.setTranslationSourceLanguage(crawledHeadlines);
+        translator.setSourceLanguage(headlineText);
 
         assertEquals(expectedSourceLanguage, translator.getSourceLanguage());
     }
@@ -83,8 +86,9 @@ class TextTranslatorTest {
 
     @Test
     void testTranslationRequestExecutionError() throws IOException {
-        mockNewClientCall();
-        doThrow(new IOException()).when(mockedCall).execute();
+        translator.setClient(mockedClient);
+
+        when(mockedClient.executeRequest(any())).thenThrow(new IOException());
 
         assertThrows(RuntimeException.class, () -> translator.executeTranslationApiRequest(mockedRequest));
     }
@@ -231,8 +235,8 @@ class TextTranslatorTest {
     }
 
     private void mockNewClientCall() throws IOException {
-        when(mockedClient.newCall(any())).thenReturn(mockedCall);
-        when(mockedCall.execute()).thenReturn(mockedResponse);
+        when(mockedClient.executeRequest(any())).thenReturn(mockedResponse);
+//        when(mockedCall.execute()).thenReturn(mockedResponse); // TODO
         translator.setClient(mockedClient);
     }
 
