@@ -51,7 +51,7 @@ public class TextTranslator implements Translator {
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
                 .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", "apikey")
+                .addHeader("X-RapidAPI-Key", apiKey)
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
     }
