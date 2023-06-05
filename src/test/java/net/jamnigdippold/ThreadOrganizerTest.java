@@ -31,7 +31,7 @@ class ThreadOrganizerTest {
     @AfterEach
     public void tearDown() {
         threadOrganizer = null;
-        logger.clearLog();
+        logger.clearLog(); //
     }
 
     @Test
