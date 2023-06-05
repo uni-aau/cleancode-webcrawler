@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class ThreadOrganizer {
+    private static final Logger logger = ErrorLogger.getInstance();
     private WebsiteCrawler[] crawlers;
     private final String[] websiteUrls;
     private final int[] depthsOfRecursiveSearch;
@@ -45,7 +46,7 @@ public class ThreadOrganizer {
             try {
                 crawler.join();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                logger.logError("Error while waiting for crawlers: " + e);
             }
         }
     }
@@ -68,7 +69,7 @@ public class ThreadOrganizer {
             writer.write(output.toString());
             writer.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.logError("Error while closing file writer " + e);
         }
     }
 
