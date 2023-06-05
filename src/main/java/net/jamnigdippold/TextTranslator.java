@@ -80,12 +80,17 @@ public class TextTranslator implements Translator {
         if (checkNodeSuccessStatus(node)) {
             return node.get("data").get("translatedText").asText();
         } else {
-            return null;
+            return null; // TODO
         }
     }
 
     private boolean checkNodeSuccessStatus(JsonNode node) {
-        return node.get("status").asText().equals("success");
+        try {
+            return node.get("status").asText().equals("success");
+        } catch (NullPointerException e) {
+            System.out.println("TODO");
+        }
+        return false;
     }
 
     protected String extractLanguageCode(Response apiResponse) {
@@ -97,11 +102,18 @@ public class TextTranslator implements Translator {
     }
 
     protected String tryToExtractLanguageCode(Response apiResponse) throws IOException {
+        String extractedLanguageCode = "";
         JsonNode node;
 
         node = createNode(apiResponse);
 
-        return node.get("data").get("detectedSourceLanguage").get("code").asText();
+        try {
+            extractedLanguageCode = node.get("data").get("detectedSourceLanguage").get("code").asText();
+        } catch (NullPointerException e) {
+//            throw new NullPointerException("ERROR");
+        }
+
+        return extractedLanguageCode;
     }
 
     private JsonNode createNode(Response apiResponse) throws IOException {
@@ -138,7 +150,7 @@ public class TextTranslator implements Translator {
         return sourceLanguage;
     }
 
-    public String getTargetLanguage() { // TODO necessary?
+    public String getTargetLanguage() {
         return targetLanguage;
     }
 
