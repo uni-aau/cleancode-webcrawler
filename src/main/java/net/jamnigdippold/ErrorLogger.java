@@ -33,7 +33,7 @@ public class ErrorLogger implements Logger {
             errorLog.append(initialErrorHeadline);
 
             if (loggedErrors.isEmpty()) {
-                errorLog.append("No errors thrown while executing program <br>\n");
+                errorLog.append("- No errors thrown while executing program <br>\n");
             } else {
                 for (String logEntry : loggedErrors) {
                     errorLog.append("- ").append(logEntry).append("<br>\n");
