@@ -13,7 +13,7 @@ import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -127,7 +127,7 @@ class WebsiteCrawlerTest {
         verify(webCrawler).establishConnection();
         verify(webCrawler).crawlHeadlines();
         verify(webCrawler).initializeTranslator();
-       // verify(webCrawler).setSourceLanguage();
+        // verify(webCrawler).setSourceLanguage();
         verify(webCrawler).outputInput();
         verify(webCrawler).outputCrawledHeadlines();
         verify(webCrawler).crawlWebsiteLinks();
@@ -257,7 +257,7 @@ class WebsiteCrawlerTest {
 
         webCrawler.initializeTranslator();
 
-//        assertEquals("de", webCrawler.getTranslator().getTargetLanguage());
+        assertEquals("de", ((TextTranslator) webCrawler.getTranslator()).getTargetLanguage()); // Todo casting?
     }
 
 
@@ -294,11 +294,11 @@ class WebsiteCrawlerTest {
     }
 
     void mockGetSourceLanguage() {
-       webCrawler.setTranslator(translator);
+        webCrawler.setTranslator(translator);
         doReturn("de").when(translator).getSourceLanguage();
     }
 
-   // @Test TODO: figure out SourceLanguage
+    // @Test TODO: figure out SourceLanguage
     void testSetSourceLanguage() {
         mockGetSourceLanguage();
 
