@@ -4,5 +4,8 @@ import java.util.ArrayList;
 
 public interface Logger {
     void logError(String errorMessage);
-    ArrayList<String> getLoggedErrors();
+
+    String getErrorLogAsString();
+
+    ArrayList<String> getErrorLog();
 }
