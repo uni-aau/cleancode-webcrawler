@@ -1,5 +1,6 @@
 package net.jamnigdippold;
 
+import com.google.inject.Inject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WebsiteCrawler extends Thread {
+    @Inject private Logger logger;
     private String websiteUrl;
     private int maxDepthOfRecursiveSearch;
     private int currentDepthOfRecursiveSearch;
@@ -61,6 +63,7 @@ public class WebsiteCrawler extends Thread {
     }
 
     public void startCrawling() {
+        initializeLogger();
         establishConnection();
         crawlHeadlines();
         initializeTranslator();
@@ -69,6 +72,10 @@ public class WebsiteCrawler extends Thread {
         outputCrawledHeadlines();
         crawlWebsiteLinks();
         recursivelyCrawlLinkedWebsites();
+    }
+
+    protected void initializeLogger() {
+        this.logger = new ErrorLogger();
     }
 
     protected void outputInput() {
