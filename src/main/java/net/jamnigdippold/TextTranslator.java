@@ -2,11 +2,15 @@ package net.jamnigdippold;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.*;
+import okhttp3.FormBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import java.io.IOException;
 
 public class TextTranslator implements Translator {
+    private static final Logger logger = ErrorLogger.getInstance();
     private HttpClient httpClient;
     private String sourceLanguage = "auto";
     private String targetLanguage;
@@ -47,7 +51,7 @@ public class TextTranslator implements Translator {
                 .url("https://text-translator2.p.rapidapi.com/translate")
                 .post(body)
                 .addHeader("content-type", "application/x-www-form-urlencoded")
-                .addHeader("X-RapidAPI-Key", apiKey)
+                .addHeader("X-RapidAPI-Key", "apikey")
                 .addHeader("X-RapidAPI-Host", "text-translator2.p.rapidapi.com")
                 .build();
     }
@@ -60,7 +64,8 @@ public class TextTranslator implements Translator {
         try {
             return httpClient.executeRequest(translationApiRequest);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.logError("Error while executing translation request: " + e.getMessage());
+            return null;
         }
     }
 
@@ -68,8 +73,9 @@ public class TextTranslator implements Translator {
         try {
             return extractTranslation(apiResponse);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.logError("Error while trying to extract translated text: " + e.getMessage());
         }
+        return "";
     }
 
     protected String extractTranslation(Response apiResponse) throws IOException {
@@ -80,7 +86,7 @@ public class TextTranslator implements Translator {
         if (checkNodeSuccessStatus(node)) {
             return node.get("data").get("translatedText").asText();
         } else {
-            return null; // TODO
+            return ""; // TODO
         }
     }
 
@@ -88,7 +94,7 @@ public class TextTranslator implements Translator {
         try {
             return node.get("status").asText().equals("success");
         } catch (NullPointerException e) {
-            System.out.println("TODO");
+            logger.logError("Error while checking the success status of node: " + e.getMessage());
         }
         return false;
     }
@@ -97,7 +103,8 @@ public class TextTranslator implements Translator {
         try {
             return tryToExtractLanguageCode(apiResponse);
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+            logger.logError("Error while trying to extract language code: " + e.getMessage());
+            return "";
         }
     }
 
@@ -110,9 +117,8 @@ public class TextTranslator implements Translator {
         try {
             extractedLanguageCode = node.get("data").get("detectedSourceLanguage").get("code").asText();
         } catch (NullPointerException e) {
-//            throw new NullPointerException("ERROR");
+            logger.logError("NullPointerException while trying to extract language code: " + e.getMessage()); // todo kombinieren mit ioexception?
         }
-
         return extractedLanguageCode;
     }
 
