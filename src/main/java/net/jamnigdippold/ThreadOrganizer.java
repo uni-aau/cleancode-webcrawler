@@ -10,7 +10,7 @@ public class ThreadOrganizer {
     private final int[] depthsOfRecursiveSearch;
     private final String[] languageCodes;
     private final String outputPath;
-    private StringBuilder output;
+    private StringBuilder output = new StringBuilder();
 
     public ThreadOrganizer(String[] websiteUrls, int[] depthsOfRecursiveSearch, String[] languageCodes, String outputPath) {
         this.websiteUrls = websiteUrls;
@@ -53,14 +53,13 @@ public class ThreadOrganizer {
     }
 
     protected void getOutputFromCrawlers() {
-        output = new StringBuilder();
         for (WebsiteCrawler crawler : crawlers) {
             output.append(crawler.getOutput());
         }
     }
 
     protected void appendLoggingErrors() {
-        String errorLog = ErrorLogger.getInstance().getErrorLogAsString();
+        String errorLog = logger.getErrorLogAsString();
         output.append(errorLog);
     }
 
