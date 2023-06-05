@@ -99,8 +99,6 @@ class MainTest {
         assertEquals(1, Main.urlInputAmount);
     }
 
-
-    // TODO
     @Test
     void testGetAmountOfCrawlingWebsitesInputMismatch() {
         mockInputScanner("Number\n-1\n1\n");

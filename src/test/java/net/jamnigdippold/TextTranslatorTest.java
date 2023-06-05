@@ -261,7 +261,6 @@ class TextTranslatorTest {
 
     private void mockNewClientCall() throws IOException {
         when(mockedClient.executeRequest(any())).thenReturn(mockedResponse);
-//        when(mockedCall.execute()).thenReturn(mockedResponse); // TODO
         translator.setClient(mockedClient);
     }
 
