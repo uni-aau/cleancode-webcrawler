@@ -8,4 +8,6 @@ public interface Logger {
     String getErrorLogAsString();
 
     ArrayList<String> getErrorLog();
+
+    void clearLog();
 }

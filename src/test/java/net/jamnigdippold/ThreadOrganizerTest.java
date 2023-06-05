@@ -18,6 +18,7 @@ class ThreadOrganizerTest {
     private final String outputPath = "test.md";
     private ThreadOrganizer threadOrganizer;
     private WebsiteCrawler[] mockedCrawlers;
+    private final Logger logger = ErrorLogger.getInstance();
 
     @BeforeEach
     public void setUp() {
@@ -30,6 +31,7 @@ class ThreadOrganizerTest {
     @AfterEach
     public void tearDown() {
         threadOrganizer = null;
+        logger.clearLog();
     }
 
     @Test
@@ -79,7 +81,9 @@ class ThreadOrganizerTest {
     void testWaitForCrawlersToFinishException() throws InterruptedException {
         doThrow(new InterruptedException()).when(mockedCrawlers[0]).join();
 
-        assertThrows(RuntimeException.class, threadOrganizer::waitForCrawlersToFinish);
+        threadOrganizer.waitForCrawlersToFinish();
+
+        assertEquals("Error while waiting for crawlers: java.lang.InterruptedException", logger.getErrorLog().get(0));
     }
 
     @Test
@@ -110,6 +114,8 @@ class ThreadOrganizerTest {
         String invalidFilePath = "C:\\Windows\\System32\\test.txt";
         threadOrganizer = new ThreadOrganizer(websiteUrls, depthsOfRecursiveSearch, languageCodes, invalidFilePath);
 
-        assertThrows(RuntimeException.class, threadOrganizer::saveOutputToFile);
+        threadOrganizer.saveOutputToFile();
+
+        assertEquals("Error while closing file writer java.io.FileNotFoundException: C:\\Windows\\System32\\test.txt (Zugriff verweigert)", logger.getErrorLog().get(0));
     }
 }

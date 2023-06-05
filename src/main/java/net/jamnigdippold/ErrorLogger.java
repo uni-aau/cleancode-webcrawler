@@ -47,4 +47,9 @@ public class ErrorLogger implements Logger {
     public ArrayList<String> getErrorLog() {
         return loggedErrors;
     }
+
+    @Override
+    public void clearLog() {
+        loggedErrors.clear();
+    }
 }
