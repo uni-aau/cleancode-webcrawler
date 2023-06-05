@@ -45,6 +45,7 @@ class ThreadOrganizerTest {
         verify(threadOrganizer).startCrawlers();
         verify(threadOrganizer).waitForCrawlersToFinish();
         verify(threadOrganizer).getOutputFromCrawlers();
+        verify(threadOrganizer).appendLoggingErrors();
         verify(threadOrganizer).saveOutputToFile();
     }
 
