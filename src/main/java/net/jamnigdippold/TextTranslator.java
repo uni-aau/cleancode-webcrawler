@@ -65,7 +65,7 @@ public class TextTranslator implements Translator {
             return httpClient.executeRequest(translationApiRequest);
         } catch (IOException e) {
             logger.logError("Error while executing translation request: " + e);
-            return null;
+            return null; // TODO
         }
     }
 
@@ -75,7 +75,7 @@ public class TextTranslator implements Translator {
         } catch (IOException e) {
             logger.logError("Error while trying to extract translated text: " + e);
         }
-        return "";
+        return ""; // TODO
     }
 
     protected String extractTranslation(Response apiResponse) throws IOException {
