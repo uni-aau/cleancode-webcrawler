@@ -30,6 +30,7 @@ class WebsiteCrawlerTest {
     MockedStatic<Jsoup> mockedJsoup;
     MockedConstruction<WebsiteCrawler> mockedCrawlerConstruction;
     private Elements crawledHeadlines;
+    private final Logger logger = ErrorLogger.getInstance();
 
     @BeforeEach
     public void setUp() {
@@ -52,6 +53,7 @@ class WebsiteCrawlerTest {
 
     @AfterEach
     public void tearDown() {
+        logger.clearLog();
         webCrawler = null;
         if (mockedJsoup != null)
             mockedJsoup.close();
@@ -67,8 +69,6 @@ class WebsiteCrawlerTest {
         webCrawler.establishConnection();
 
         mockedJsoup.verify(() -> Jsoup.connect(any()));
-
-
     }
 
     @Test
@@ -77,10 +77,9 @@ class WebsiteCrawlerTest {
         doCallRealMethod().when(webCrawler).establishConnection();
 
         webCrawler.setWebsiteUrl("Not a real URL");
+        webCrawler.establishConnection();
 
-        assertThrows(RuntimeException.class, () -> webCrawler.establishConnection());
-
-
+        assertEquals("Error whilst connecting to websiteUrl Not a real URL: java.net.MalformedURLException", logger.getErrorLog().get(0));
     }
 
     @Test
@@ -147,8 +146,6 @@ class WebsiteCrawlerTest {
         webCrawler.recursivelyCrawlLinkedWebsites();
 
         assertEquals(expectedOutputMessage, webCrawler.getOutput());
-
-
     }
 
     @Test
@@ -228,7 +225,9 @@ class WebsiteCrawlerTest {
         doThrow(InterruptedException.class).when(mockedCrawler).join();
         webCrawler.setRecursiveCrawlers(new ArrayList<>(List.of(mockedCrawler)));
 
-        assertThrows(RuntimeException.class, webCrawler::waitForCrawlerThreads);
+        webCrawler.waitForCrawlerThreads();
+
+        assertEquals("Error whilst joining crawler threads: java.lang.InterruptedException", logger.getErrorLog().get(0));
     }
 
     @Test
