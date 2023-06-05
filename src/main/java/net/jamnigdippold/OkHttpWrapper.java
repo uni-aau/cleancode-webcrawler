@@ -7,7 +7,7 @@ import okhttp3.Response;
 import java.io.IOException;
 
 public class OkHttpWrapper implements HttpClient {
-    private final OkHttpClient client;
+    private OkHttpClient client;
 
     public OkHttpWrapper() {
         this.client = new OkHttpClient();
@@ -16,5 +16,9 @@ public class OkHttpWrapper implements HttpClient {
     @Override
     public Response executeRequest(Request request) throws IOException {
         return client.newCall(request).execute();
+    }
+
+    protected void setClient(OkHttpClient client) {
+        this.client = client;
     }
 }
