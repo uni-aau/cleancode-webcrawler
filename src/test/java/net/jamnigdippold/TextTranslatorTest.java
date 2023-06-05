@@ -34,8 +34,20 @@ class TextTranslatorTest {
         translator.setTargetLanguage("de");
     }
 
-    // Todo test translate()
+    @Test
+    void testTranslate() {
+        String input = "Headline";
+        String expectedTranslation = "Überschrift";
+        doNothing().when(translator).setSourceLanguage(input);
+        doReturn(expectedTranslation).when(translator).getTranslatedHeadline(input);
 
+        String result = translator.translate(input);
+
+        assertEquals(expectedTranslation, result);
+        verify(translator).setSourceLanguage(input);
+        verify(translator).getTranslatedHeadline(input);
+
+    }
 
     @Test
     void testCorrectSettingOfSourceLanguageEnglish() throws IOException {
@@ -50,6 +62,7 @@ class TextTranslatorTest {
 
         assertEquals(expectedSourceLanguage, translator.getSourceLanguage());
     }
+
     @Test
     void testSetSourceLanguageNoHeadlines() throws IOException {
         String expectedSourceLanguage = "auto";
