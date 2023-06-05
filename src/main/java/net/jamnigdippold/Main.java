@@ -19,8 +19,8 @@ public class Main {
     public static ThreadOrganizer threadOrganizer;
 
     public static void main(String[] args) {
-        //  getUserInput();
-        fakeUserInput();
+        getUserInput();
+        // fakeUserInput();
         createThreadOrganizer();
         threadOrganizer.startConcurrentCrawling();
         System.exit(0);
