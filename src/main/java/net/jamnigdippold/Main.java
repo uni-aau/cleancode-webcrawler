@@ -16,21 +16,36 @@ public class Main {
     public static Scanner inputScanner;
     public static JFileChooser fileChooser;
     public static int fileChooserStatus;
+    public static ThreadOrganizer threadOrganizer;
 
     public static void main(String[] args) {
-//        getUserInput();
-        WebsiteCrawler crawler = createCrawler();
-        crawler.startCrawling();
-//        crawler.startCrawlingMultipleUrls();
+        //  getUserInput();
+        fakeUserInput();
+        createThreadOrganizer();
+        threadOrganizer.startConcurrentCrawling();
         System.exit(0);
     }
 
-    public static WebsiteCrawler createCrawler() {
-//         Todo only for testing
-//        websiteUrls = new String[2];
-//        websiteUrls[0] = "http://david.jamnig.net/cctest/threads/thread1";
-//        websiteUrls[1] = "http://david.jamnig.net/cctest/threads/thread2";
-        return new WebsiteCrawler("http://david.jamnig.net/cctest", 1, "de", "../main.md");
+    public static void fakeUserInput() {
+        websiteUrls = new String[]{
+                "http://david.jamnig.net/cctest/threads/thread1",
+                "http://david.jamnig.net/cctest/threads/thread1",
+                "http://david.jamnig.net/cctest/threads/thread1",
+                "http://david.jamnig.net/cctest/threads/thread1",
+                "http://david.jamnig.net/cctest/threads/thread1",
+                "http://david.jamnig.net/cctest/threads/thread2"};
+        languageCodes = new String[]{"de", "de",
+                "de",
+                "de",
+                "de",
+                "de",
+                "de"};
+        depthsOfRecursiveSearch = new int[]{3, 3, 3, 3, 3};
+        outputPath = "E:\\TestOutput.md";
+    }
+
+    public static void createThreadOrganizer() {
+        threadOrganizer = new ThreadOrganizer(websiteUrls, depthsOfRecursiveSearch, languageCodes, outputPath);
     }
 
     private static void closeScanner() {
