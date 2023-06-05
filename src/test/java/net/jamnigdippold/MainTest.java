@@ -49,7 +49,6 @@ class MainTest {
     }
 
     private void resetMainField() {
-        Main.websiteUrl = null; // todo
         Main.websiteUrls = null;
         Main.depthOfRecursiveSearch = -1;
         Main.depthsOfRecursiveSearch = null;

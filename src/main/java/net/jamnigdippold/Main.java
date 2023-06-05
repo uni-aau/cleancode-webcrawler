@@ -6,7 +6,6 @@ import java.util.*;
 
 public class Main {
     public static int urlInputAmount;
-    public static String websiteUrl;
     public static String[] websiteUrls;
     public static int depthOfRecursiveSearch;
     public static int[] depthsOfRecursiveSearch;
