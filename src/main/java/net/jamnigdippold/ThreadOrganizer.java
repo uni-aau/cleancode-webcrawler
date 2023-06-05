@@ -23,6 +23,7 @@ public class ThreadOrganizer {
         startCrawlers();
         waitForCrawlersToFinish();
         getOutputFromCrawlers();
+        appendLoggingErrors();
         saveOutputToFile();
     }
 
@@ -54,6 +55,11 @@ public class ThreadOrganizer {
         for (WebsiteCrawler crawler : crawlers) {
             output.append(crawler.getOutput());
         }
+    }
+
+    protected void appendLoggingErrors() {
+        String errorLog = ErrorLogger.getInstance().getErrorLogAsString();
+        output.append(errorLog);
     }
 
     protected void saveOutputToFile() {
