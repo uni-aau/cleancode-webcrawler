@@ -36,6 +36,7 @@ public class ThreadOrganizer {
     }
 
     protected void startCrawlers() {
+        System.out.println("Starting crawling process!");
         for (WebsiteCrawler crawler : crawlers) {
             crawler.start();
         }
@@ -71,6 +72,7 @@ public class ThreadOrganizer {
         } catch (IOException e) {
             logger.logError("Error while closing file writer " + e);
         }
+        System.out.println("Finished crawling process");
     }
 
     protected WebsiteCrawler[] getCrawlers() {
