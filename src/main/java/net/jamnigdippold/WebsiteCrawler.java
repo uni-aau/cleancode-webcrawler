@@ -88,7 +88,7 @@ public class WebsiteCrawler extends Thread {
         try {
             websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
         } catch (IOException e) {
-            logger.logError("Error whilst connection to websiteUrl " + e.getMessage());
+            logger.logError("Error whilst connection to websiteUrl " + e);
         }
     }
 
@@ -118,7 +118,7 @@ public class WebsiteCrawler extends Thread {
             try {
                 crawler.join();
             } catch (InterruptedException e) {
-                logger.logError("Error whilst joining crawler threads " + e.getMessage());
+                logger.logError("Error whilst joining crawler threads " + e);
             }
         }
     }

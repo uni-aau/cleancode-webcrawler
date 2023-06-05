@@ -64,7 +64,7 @@ public class TextTranslator implements Translator {
         try {
             return httpClient.executeRequest(translationApiRequest);
         } catch (IOException e) {
-            logger.logError("Error while executing translation request: " + e.getMessage());
+            logger.logError("Error while executing translation request: " + e);
             return null;
         }
     }
@@ -73,7 +73,7 @@ public class TextTranslator implements Translator {
         try {
             return extractTranslation(apiResponse);
         } catch (IOException e) {
-            logger.logError("Error while trying to extract translated text: " + e.getMessage());
+            logger.logError("Error while trying to extract translated text: " + e);
         }
         return "";
     }
@@ -94,7 +94,7 @@ public class TextTranslator implements Translator {
         try {
             return node.get("status").asText().equals("success");
         } catch (NullPointerException e) {
-            logger.logError("Error while checking the success status of node: " + e.getMessage());
+            logger.logError("Error while checking the success status of node: " + e);
         }
         return false;
     }
@@ -103,7 +103,7 @@ public class TextTranslator implements Translator {
         try {
             return tryToExtractLanguageCode(apiResponse);
         } catch (IOException e) {
-            logger.logError("Error while trying to extract language code: " + e.getMessage());
+            logger.logError("Error while trying to extract language code: " + e);
             return "";
         }
     }
@@ -117,7 +117,7 @@ public class TextTranslator implements Translator {
         try {
             extractedLanguageCode = node.get("data").get("detectedSourceLanguage").get("code").asText();
         } catch (NullPointerException e) {
-            logger.logError("NullPointerException while trying to extract language code: " + e.getMessage()); // todo kombinieren mit ioexception?
+            logger.logError("NullPointerException while trying to extract language code: " + e); // todo kombinieren mit ioexception?
         }
         return extractedLanguageCode;
     }
