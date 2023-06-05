@@ -25,11 +25,11 @@ class WebsiteCrawlerTest {
     private static Document mockedDocument;
     private static WebsiteCrawler webCrawler;
     private final ArrayList<String> crawledLinks = new ArrayList<>();
-    private Elements crawledHeadlines;
     @Mock
     TextTranslator translator;
     MockedStatic<Jsoup> mockedJsoup;
     MockedConstruction<WebsiteCrawler> mockedCrawlerConstruction;
+    private Elements crawledHeadlines;
 
     @BeforeEach
     public void setUp() {
@@ -262,7 +262,7 @@ class WebsiteCrawlerTest {
 
 
     @Test
-    void testPrintCrawledHeadlinesZeroDepth() throws IOException {
+    void testPrintCrawledHeadlinesZeroDepth() {
         String expectedPrintMessage = "# Überschrift h1\n\n";
         mockHeadingTranslation();
 
@@ -275,7 +275,7 @@ class WebsiteCrawlerTest {
     }
 
     @Test
-    void testPrintCrawledHeadlinesOneDepth() throws IOException {
+    void testPrintCrawledHeadlinesOneDepth() {
         String expectedPrintMessage = "# --> Überschrift h1\n\n";
         mockHeadingTranslation();
 
@@ -360,7 +360,7 @@ class WebsiteCrawlerTest {
 
 
     @Test
-    void testPrintHeaderLevel() throws IOException {
+    void testPrintHeaderLevel() {
         String expectedPrintMessage = "# ";
         Element crawledHeadline = new Element("h1").text("Heading h1");
 
@@ -370,7 +370,7 @@ class WebsiteCrawlerTest {
     }
 
     @Test
-    void testPrintZeroDepth() throws IOException {
+    void testPrintZeroDepth() {
         String expectedOutputMessage = "> ";
         webCrawler.setUpOutput();
 
@@ -380,7 +380,7 @@ class WebsiteCrawlerTest {
     }
 
     @Test
-    void testPrintHigherDepth() throws IOException {
+    void testPrintHigherDepth() {
         String expectedOutputMessage = "------> ";
 
         webCrawler.outputDepthIndicator(3);
@@ -389,7 +389,7 @@ class WebsiteCrawlerTest {
     }
 
     @Test
-    void testPrintWebcrawlerInput() throws IOException {
+    void testPrintWebcrawlerInput() {
         String websiteUrlInput = "input: <a>https://example.com</a>\n";
         String depthInput = "<br>depth: 1\n";
         String sourceLanguageInput = "<br>source language: auto\n";
@@ -405,7 +405,7 @@ class WebsiteCrawlerTest {
     }
 
     @Test
-    void testPrintCrawledWorkingLink() throws IOException {
+    void testPrintCrawledWorkingLink() {
         String lineBreakMessage = "<br>--";
         String depthIndicatorMessage = "> ";
         String firstLinkPart = "link to <a>";
@@ -420,7 +420,7 @@ class WebsiteCrawlerTest {
     }
 
     @Test
-    void testPrintCrawledBrokenLink() throws IOException {
+    void testPrintCrawledBrokenLink() {
         String lineBreakMessage = "<br>--";
         String depthIndicatorMessage = "> ";
         String firstLinkPart = "broken link <a>";
