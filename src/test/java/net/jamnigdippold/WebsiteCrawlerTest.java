@@ -15,9 +15,8 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.*;
 import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -166,7 +165,7 @@ class WebsiteCrawlerTest {
         assertEquals(expectedOutputMessage, webCrawler.getOutput());
     }
 
-   // @Test TODO: find way to mock the creation of new Crawler without mocking the Thread they are running on
+    @Test
     void testRecursiveWebsiteCrawlingAtHigherDepth() throws IOException {
         mockJsoup();
         mockCrawlerCreation();
@@ -189,20 +188,25 @@ class WebsiteCrawlerTest {
         mockedCrawlerConstruction = mockConstruction(WebsiteCrawler.class,
                 (mock, context) -> {
                     setMockedMethodeToCallRealMethods(mock);
-
+                    mock.initializeValues((String) context.arguments().get(0), (int) context.arguments().get(1), (String) context.arguments().get(2), (int) context.arguments().get(3));
                     doAnswer(invocationOnMock -> {
                         ArrayList<String> crawledLinks = new ArrayList<>();
                         crawledLinks.add("https://example.com");
                         mock.setCrawledLinks(crawledLinks);
-                        mock.setMaxDepthOfRecursiveSearch((int) context.arguments().get(1));
-                        mock.setCurrentDepthOfRecursiveSearch((int) context.arguments().get(3));
+                        mock.outputInput();
+
                         mock.recursivelyCrawlLinkedWebsites();
                         return null;
                     }).when(mock).startCrawling();
+                    doAnswer(invocationOnMock -> {
+                        mock.run();
+                        return null;
+                    }).when(mock).start();
                 });
     }
 
     void setMockedMethodeToCallRealMethods(WebsiteCrawler mock) {
+        doCallRealMethod().when(mock).initializeValues(anyString(), anyInt(), anyString(), anyInt());
         doCallRealMethod().when(mock).setCrawledLinks(any());
         doCallRealMethod().when(mock).setCurrentDepthOfRecursiveSearch(anyInt());
         doCallRealMethod().when(mock).setMaxDepthOfRecursiveSearch(anyInt());
@@ -212,8 +216,19 @@ class WebsiteCrawlerTest {
         doCallRealMethod().when(mock).recursivelyCrawlLinkedWebsites();
         doCallRealMethod().when(mock).waitForCrawlerThreads();
         doCallRealMethod().when(mock).appendOutputFromRecursiveCrawlers();
-        doCallRealMethod().when(mock).start();
+        doCallRealMethod().when(mock).getOutput();
+        doCallRealMethod().when(mock).startNewCrawler(any());
+        doCallRealMethod().when(mock).outputInput();
         doCallRealMethod().when(mock).run();
+    }
+
+    @Test
+    void testWaitForCrawlerThreadsException() throws InterruptedException {
+        WebsiteCrawler mockedCrawler = mock(WebsiteCrawler.class);
+        doThrow(InterruptedException.class).when(mockedCrawler).join();
+        webCrawler.setRecursiveCrawlers(new ArrayList<>(List.of(mockedCrawler)));
+
+        assertThrows(RuntimeException.class, webCrawler::waitForCrawlerThreads);
     }
 
     @Test

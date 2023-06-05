@@ -263,4 +263,8 @@ public class WebsiteCrawler extends Thread {
     public void setUpOutput() {
         output = new StringBuilder();
     }
+
+    public void setRecursiveCrawlers(List<WebsiteCrawler> crawlers) {
+        recursiveCrawlers = crawlers;
+    }
 }

@@ -26,43 +26,55 @@ public class ThreadOrganizer {
         saveOutputToFile();
     }
 
-    private void initializeCrawlers() {
+    protected void initializeCrawlers() {
         crawlers = new WebsiteCrawler[websiteUrls.length];
         for (int i = 0; i < websiteUrls.length; i++) {
             crawlers[i] = new WebsiteCrawler(websiteUrls[i], depthsOfRecursiveSearch[i], languageCodes[i]);
         }
     }
 
-    private void startCrawlers() {
+    protected void startCrawlers() {
         for (WebsiteCrawler crawler : crawlers) {
             crawler.start();
         }
     }
 
-    private void waitForCrawlersToFinish() {
+    protected void waitForCrawlersToFinish() {
         for (WebsiteCrawler crawler : crawlers) {
             try {
                 crawler.join();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
     }
 
-    private void getOutputFromCrawlers() {
+    protected void getOutputFromCrawlers() {
         output = new StringBuilder();
         for (WebsiteCrawler crawler : crawlers) {
             output.append(crawler.getOutput());
         }
     }
 
-    private void saveOutputToFile() {
+    protected void saveOutputToFile() {
         try {
             FileWriter writer = new FileWriter(outputPath);
             writer.write(output.toString());
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
+    }
+
+    protected WebsiteCrawler[] getCrawlers() {
+        return crawlers;
+    }
+
+    protected void setCrawlers(WebsiteCrawler[] crawlers) {
+        this.crawlers = crawlers;
+    }
+
+    protected String getOutput() {
+        return output.toString();
     }
 }
