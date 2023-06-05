@@ -8,7 +8,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.FileWriter;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class ThreadOrganizerTest {
@@ -109,7 +109,16 @@ class ThreadOrganizerTest {
         mockedConstruction.close();
     }
 
-//    @Test // todo build hat persönliches problem dagegen (linux)
+    @Test
+    void testAppendLoggingErrorsToOutput() {
+        String expectedOutput = "# <br> ------- ERRORS ------- <br>\n- No errors thrown while executing program <br>\n";
+
+        threadOrganizer.appendLoggingErrors();
+
+        assertEquals(expectedOutput, threadOrganizer.getOutput());
+    }
+
+    //    @Test // todo build hat persönliches problem dagegen (linux)
     void testSaveOutputToFileException() {
         String invalidFilePath = "C:\\Windows\\System32\\test.txt";
         threadOrganizer = new ThreadOrganizer(websiteUrls, depthsOfRecursiveSearch, languageCodes, invalidFilePath);
