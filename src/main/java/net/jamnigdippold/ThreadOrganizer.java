@@ -65,10 +65,8 @@ public class ThreadOrganizer {
     }
 
     protected void saveOutputToFile() {
-        try {
-            FileWriter writer = new FileWriter(outputPath);
+        try (FileWriter writer = new FileWriter(outputPath)) {
             writer.write(output.toString());
-            writer.close();
         } catch (IOException e) {
             logger.logError("Error while closing file writer " + e);
         }
