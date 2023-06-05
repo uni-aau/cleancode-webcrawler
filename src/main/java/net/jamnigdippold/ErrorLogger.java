@@ -26,7 +26,7 @@ public class ErrorLogger implements Logger {
 
     @Override
     public String getErrorLogAsString() {
-        String initialErrorHeadline = "<br> ------- ERRORS ------- <br>\n";
+        String initialErrorHeadline = "# <br> ------- ERRORS ------- <br>\n";
 
         synchronized (loggedErrors) {
             StringBuilder errorLog = new StringBuilder();
@@ -36,7 +36,7 @@ public class ErrorLogger implements Logger {
                 errorLog.append("No errors thrown while executing program <br>\n");
             } else {
                 for (String logEntry : loggedErrors) {
-                    errorLog.append(logEntry).append("<br>\n");
+                    errorLog.append("- ").append(logEntry).append("<br>\n");
                 }
             }
             return errorLog.toString();
