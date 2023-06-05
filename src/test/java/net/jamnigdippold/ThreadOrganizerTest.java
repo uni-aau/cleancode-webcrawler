@@ -33,7 +33,7 @@ class ThreadOrganizerTest {
     }
 
     @Test
-    public void testStartConcurrentCrawling() {
+    void testStartConcurrentCrawling() {
         threadOrganizer = mock(ThreadOrganizer.class);
         doCallRealMethod().when(threadOrganizer).startConcurrentCrawling();
 
@@ -47,7 +47,7 @@ class ThreadOrganizerTest {
     }
 
     @Test
-    public void testInitializeCrawlers() {
+    void testInitializeCrawlers() {
         threadOrganizer.initializeCrawlers();
 
         for (int i = 0; i < websiteUrls.length; i++) {
@@ -58,7 +58,7 @@ class ThreadOrganizerTest {
     }
 
     @Test
-    public void testStartCrawlers() {
+    void testStartCrawlers() {
         threadOrganizer.startCrawlers();
 
         for (WebsiteCrawler websiteCrawler : mockedCrawlers) {
@@ -67,7 +67,7 @@ class ThreadOrganizerTest {
     }
 
     @Test
-    public void testWaitForCrawlersToFinish() throws InterruptedException {
+    void testWaitForCrawlersToFinish() throws InterruptedException {
         threadOrganizer.waitForCrawlersToFinish();
 
         for (WebsiteCrawler websiteCrawler : mockedCrawlers) {
@@ -76,14 +76,14 @@ class ThreadOrganizerTest {
     }
 
     @Test
-    public void testWaitForCrawlersToFinishException() throws InterruptedException {
+    void testWaitForCrawlersToFinishException() throws InterruptedException {
         doThrow(new InterruptedException()).when(mockedCrawlers[0]).join();
 
         assertThrows(RuntimeException.class, threadOrganizer::waitForCrawlersToFinish);
     }
 
     @Test
-    public void testGetOutputFromCrawlers() {
+    void testGetOutputFromCrawlers() {
         doReturn("Mocked Output 1!\n").when(mockedCrawlers[0]).getOutput();
         doReturn("Mocked Output 2!\n").when(mockedCrawlers[1]).getOutput();
 
@@ -93,7 +93,7 @@ class ThreadOrganizerTest {
     }
 
     @Test
-    public void testSaveOutputToFile() throws Exception {
+    void testSaveOutputToFile() throws Exception {
         MockedConstruction<FileWriter> mockedConstruction = mockConstruction(FileWriter.class);
         threadOrganizer.getOutputFromCrawlers();
 
@@ -106,7 +106,7 @@ class ThreadOrganizerTest {
     }
 
     @Test
-    public void testSaveOutputToFileException() {
+    void testSaveOutputToFileException() {
         String invalidFilePath = "C:\\Windows\\System32\\test.txt";
         threadOrganizer = new ThreadOrganizer(websiteUrls, depthsOfRecursiveSearch, languageCodes, invalidFilePath);
 
