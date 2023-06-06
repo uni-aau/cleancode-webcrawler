@@ -5,12 +5,12 @@ import java.io.IOException;
 
 public class ThreadOrganizer {
     private static final Logger logger = ErrorLogger.getInstance();
-    private WebsiteCrawler[] crawlers;
     private final String[] websiteUrls;
     private final int[] depthsOfRecursiveSearch;
     private final String[] languageCodes;
     private final String outputPath;
-    private StringBuilder output = new StringBuilder();
+    private String output;
+    private CrawlerLauncher launcher;
 
     public ThreadOrganizer(String[] websiteUrls, int[] depthsOfRecursiveSearch, String[] languageCodes, String outputPath) {
         this.websiteUrls = websiteUrls;
@@ -20,67 +20,39 @@ public class ThreadOrganizer {
     }
 
     public void startConcurrentCrawling() {
-        initializeCrawlers();
         startCrawlers();
-        waitForCrawlersToFinish();
         getOutputFromCrawlers();
         appendLoggingErrors();
         saveOutputToFile();
     }
 
-    protected void initializeCrawlers() {
-        crawlers = new WebsiteCrawler[websiteUrls.length];
-        for (int i = 0; i < websiteUrls.length; i++) {
-            crawlers[i] = new WebsiteCrawler(websiteUrls[i], depthsOfRecursiveSearch[i], languageCodes[i]);
-        }
-    }
-
     protected void startCrawlers() {
-        System.out.println("Starting crawling process!");
-        for (WebsiteCrawler crawler : crawlers) {
-            crawler.start();
-        }
-    }
-
-    protected void waitForCrawlersToFinish() {
-        for (WebsiteCrawler crawler : crawlers) {
-            try {
-                crawler.join();
-            } catch (InterruptedException e) {
-                logger.logError("Error while waiting for crawlers: " + e);
-            }
+        launcher = new CrawlerLauncher();
+        for (int i = 0; i < websiteUrls.length; i++) {
+            launcher.startNewCrawler(websiteUrls[i], depthsOfRecursiveSearch[i], languageCodes[i], 0);
         }
     }
 
     protected void getOutputFromCrawlers() {
-        for (WebsiteCrawler crawler : crawlers) {
-            output.append(crawler.getOutput());
-        }
+        launcher.waitForCrawlerThreadsToFinish();
+        output = launcher.getOutputFromCrawlers();
     }
 
     protected void appendLoggingErrors() {
         String errorLog = logger.getErrorLogAsString();
-        output.append(errorLog);
+        output += errorLog;
     }
 
     protected void saveOutputToFile() {
         try (FileWriter writer = new FileWriter(outputPath)) {
-            writer.write(output.toString());
+            writer.write(output);
         } catch (IOException e) {
             logger.logError("Error while closing file writer " + e);
         }
         System.out.println("Finished crawling process");
     }
 
-    protected WebsiteCrawler[] getCrawlers() {
-        return crawlers;
-    }
-
-    protected void setCrawlers(WebsiteCrawler[] crawlers) {
-        this.crawlers = crawlers;
-    }
-
     protected String getOutput() {
-        return output.toString();
+        return output;
     }
 }

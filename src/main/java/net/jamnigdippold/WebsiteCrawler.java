@@ -17,9 +17,8 @@ public class WebsiteCrawler extends Thread {
     private Document websiteDocumentConnection;
     private Elements crawledHeadlines;
     private List<String> crawledLinks;
-    private String sourceLanguage = "auto";
+    private String sourceLanguage;
     private String targetLanguage;
-    private List<WebsiteCrawler> recursiveCrawlers;
     private StringBuilder output;
     private Translator translator;
 
@@ -47,7 +46,6 @@ public class WebsiteCrawler extends Thread {
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
         this.sourceLanguage = "auto";
         this.output = new StringBuilder();
-        this.recursiveCrawlers = new ArrayList<>();
     }
 
     @Override
@@ -105,28 +103,13 @@ public class WebsiteCrawler extends Thread {
     }
 
     protected void recursivelyCrawlLinkedWebsites() {
+        CrawlerLauncher launcher = new CrawlerLauncher();
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
-            startNewCrawler(crawledLink);
+            launcher.startNewCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1);
         }
-        waitForCrawlerThreads();
-        appendOutputFromRecursiveCrawlers();
-    }
-
-    protected void waitForCrawlerThreads() {
-        for (WebsiteCrawler crawler : recursiveCrawlers) {
-            try {
-                crawler.join();
-            } catch (InterruptedException e) {
-                logger.logError("Error whilst joining crawler threads: " + e);
-            }
-        }
-    }
-
-    protected void appendOutputFromRecursiveCrawlers() {
-        for (WebsiteCrawler crawler : recursiveCrawlers) {
-            output.append(crawler.getOutput());
-        }
+        launcher.waitForCrawlerThreadsToFinish();
+        output.append(launcher.getOutputFromCrawlers());
     }
 
     protected String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
@@ -135,12 +118,6 @@ public class WebsiteCrawler extends Thread {
             absoluteUrl = websiteUrl + relativeUrl.substring(1);
 
         return absoluteUrl;
-    }
-
-    protected void startNewCrawler(String crawledLink) {
-        WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1);
-        recursiveCrawler.start();
-        recursiveCrawlers.add(recursiveCrawler);
     }
 
     protected void initializeTranslator() {
@@ -264,9 +241,5 @@ public class WebsiteCrawler extends Thread {
 
     public void setUpOutput() {
         output = new StringBuilder();
-    }
-
-    public void setRecursiveCrawlers(List<WebsiteCrawler> crawlers) {
-        recursiveCrawlers = crawlers;
     }
 }
