@@ -106,12 +106,12 @@ class TextTranslatorTest {
 
     @Test
     void testTranslationRequestExecutionError() throws IOException {
-        when(mockedClient.executeRequest(any())).thenThrow(new IOException());
+        when(mockedClient.executeRequest(any())).thenThrow(new IOException("IOException at line 50"));
 
         translator.setClient(mockedClient);
         translator.executeTranslationApiRequest(mockedRequest);
 
-        assertEquals("Error while executing translation request: java.io.IOException", logger.getErrorLog().get(0));
+        assertEquals("Error while executing translation request: IOException at line 50", logger.getErrorLog().get(0));
     }
 
     @Test
@@ -129,11 +129,11 @@ class TextTranslatorTest {
     void testTranslatedTextExtractionError() throws IOException {
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
-        doThrow(new IOException()).when(mockedResponseBody).string();
+        doThrow(new IOException("IOException at line 50")).when(mockedResponseBody).string();
 
         translator.extractTranslatedText(mockedResponse, "Headline 1");
 
-        assertEquals("Error while trying to extract translated text: java.io.IOException", logger.getErrorLog().get(0));
+        assertEquals("Error while trying to extract translated text: IOException at line 50", logger.getErrorLog().get(0));
     }
 
     @Test
@@ -143,7 +143,7 @@ class TextTranslatorTest {
 
         String actualReturnValue = translator.extractTranslatedText(mockedResponse, "Headline 1");
 
-        assertEquals("", actualReturnValue);
+        assertEquals("Headline 1", actualReturnValue);
     }
 
     @Test
@@ -161,11 +161,11 @@ class TextTranslatorTest {
     void testLanguageCodeExtractionError() throws IOException {
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
-        doThrow(new IOException()).when(mockedResponseBody).string();
+        doThrow(new IOException("IOException at line 50")).when(mockedResponseBody).string();
 
         translator.extractLanguageCode(mockedResponse);
 
-        assertEquals("Error while trying to extract language code: java.io.IOException", logger.getErrorLog().get(0));
+        assertEquals("Error while trying to extract language code: IOException at line 50", logger.getErrorLog().get(0));
     }
 
     @Test
@@ -189,7 +189,7 @@ class TextTranslatorTest {
 
         String actualTranslatedHeadline = translator.getTranslatedHeadline("Heading h1");
 
-        assertEquals("", actualTranslatedHeadline); // todo adapt when fixing null handling
+        assertEquals("Heading h1", actualTranslatedHeadline);
     }
 
     @Test

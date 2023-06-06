@@ -62,16 +62,18 @@ public class TextTranslator implements Translator {
             return httpClient.executeRequest(translationApiRequest);
         } catch (IOException e) {
             logger.logError("Error while executing translation request: " + e.getMessage());
-            return generateDefaultResponse();
+            return generateDefaultResponse(translationApiRequest);
         }
     }
 
-    protected Response generateDefaultResponse() {
+    protected Response generateDefaultResponse(Request translationApiRequest) {
         ResponseBody responseBody = ResponseBody.create(MediaType.parse("application/json"), "{\"status\":\"failure\"}");
         return new Response.Builder()
                 .code(444)
                 .message("no response")
                 .body(responseBody)
+                .request(translationApiRequest)
+                .protocol(Protocol.HTTP_2)
                 .build();
     }
 
