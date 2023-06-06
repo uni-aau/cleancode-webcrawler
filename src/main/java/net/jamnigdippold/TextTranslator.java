@@ -28,6 +28,11 @@ public class TextTranslator implements Translator {
         return getTranslatedHeadline(input);
     }
 
+    @Override
+    public String detectLanguage(String input) {
+        return getLanguageCodeFromHeadline(input);
+    }
+
     protected void setSourceLanguage(String headlineText) {
         if (sourceLanguage.equals("auto") && !headlineText.equals("")) {
             sourceLanguage = getLanguageCodeFromHeadline(headlineText);
@@ -54,6 +59,15 @@ public class TextTranslator implements Translator {
     }
 
     protected String getApiKey() {
+        String key = getApiKeyFromSystem();
+        if (key == null) {
+            logger.logError("No API-Key found in System environment!");
+            return "invalid key";
+        }
+        return key;
+    }
+
+    protected String getApiKeyFromSystem() {
         return System.getenv("RAPIDAPI_API_KEY");
     }
 
@@ -85,7 +99,7 @@ public class TextTranslator implements Translator {
         } catch (NullPointerException e) {
             logger.logError("Error while trying to extract translated text, the Json format is incorrect: " + e);
         }
-        return input; // TODO good enough?
+        return input;
     }
 
     protected String extractTranslation(Response apiResponse, String input) throws IOException, NullPointerException {
@@ -96,13 +110,17 @@ public class TextTranslator implements Translator {
         if (checkNodeSuccessStatus(node)) {
             return node.get("data").get("translatedText").asText();
         } else {
-            return input; // TODO good enough?
+            return input;
         }
     }
 
     private boolean checkNodeSuccessStatus(JsonNode node) {
         try {
-            return node.get("status").asText().equals("success");
+            if (node.get("status") == null) {
+                logger.logError("Error while checking the success status of node: API-Response:" + node);
+                return false;
+            } else
+                return node.get("status").asText().equals("success");
         } catch (NullPointerException e) {
             logger.logError("Error while checking the success status of node: " + e);
         }

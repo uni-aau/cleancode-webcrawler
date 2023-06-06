@@ -63,7 +63,7 @@ public class WebsiteCrawler extends Thread {
         establishConnection();
         crawlHeadlines();
         initializeTranslator();
-        // setSourceLanguage();
+        detectSourceLanguage();
         outputInput();
         outputCrawledHeadlines();
         crawlWebsiteLinks();
@@ -125,10 +125,9 @@ public class WebsiteCrawler extends Thread {
         translator.setTargetLanguage(targetLanguage);
     }
 
-/*    protected void setSourceLanguage() {
-        translator.setTranslationSourceLanguage(crawledHeadlines);
-        sourceLanguage = translator.getSourceLanguage();
-    }*/
+    protected void detectSourceLanguage() {
+        sourceLanguage = translator.detectLanguage(crawledHeadlines.get(0).text());
+    }
 
     protected void outputCrawledHeadlines() {
         for (Element crawledHeadline : crawledHeadlines) {

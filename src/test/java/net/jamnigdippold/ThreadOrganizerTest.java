@@ -20,6 +20,7 @@ class ThreadOrganizerTest {
     private ThreadOrganizer threadOrganizer;
     private CrawlerLauncher launcher;
     private final Logger logger = ErrorLogger.getInstance();
+    MockedConstruction<FileWriter> mockedConstruction;
 
     @BeforeEach
     public void setUp() {
@@ -33,6 +34,10 @@ class ThreadOrganizerTest {
     public void tearDown() {
         threadOrganizer = null;
         logger.clearLog();
+        if (mockedConstruction != null) {
+            mockedConstruction.close();
+            mockedConstruction = null;
+        }
     }
 
     @Test
@@ -69,15 +74,13 @@ class ThreadOrganizerTest {
 
     @Test
     void testSaveOutputToFile() throws Exception {
-        MockedConstruction<FileWriter> mockedConstruction = mockConstruction(FileWriter.class);
+        mockedConstruction = mockConstruction(FileWriter.class);
         threadOrganizer.getOutputFromCrawlers();
 
         threadOrganizer.saveOutputToFile();
 
         verify(mockedConstruction.constructed().get(0)).write(threadOrganizer.getOutput());
         verify(mockedConstruction.constructed().get(0)).close();
-
-        mockedConstruction.close();
     }
 
     @Test
@@ -91,13 +94,12 @@ class ThreadOrganizerTest {
 
     @Test
     void testSaveOutputToFileException() {
-        MockedConstruction<FileWriter> mockedConstruction = mockConstruction(FileWriter.class, (mock, context) -> {
+        mockedConstruction = mockConstruction(FileWriter.class, (mock, context) -> {
             doThrow(new IOException("java.io.FileNotFoundException in line 100")).when(mock).write(anyString());
         });
 
         threadOrganizer.saveOutputToFile();
 
         assertEquals("Error while closing file writer: java.io.IOException: java.io.FileNotFoundException in line 100", logger.getErrorLog().get(0));
-        mockedConstruction.close();
     }
 }

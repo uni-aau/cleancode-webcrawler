@@ -205,9 +205,26 @@ class TextTranslatorTest {
     }
 
     @Test
+    void testGetApiKey() {
+        doReturn("a real key").when(translator).getApiKeyFromSystem();
+        String actualKey = translator.getApiKey();
+
+        assertEquals("a real key", actualKey);
+    }
+
+    @Test
+    void testGetApiKeyNoKey() {
+        doReturn(null).when(translator).getApiKeyFromSystem();
+        String expectedKey = "invalid key";
+        String actualKey = translator.getApiKey();
+
+        assertEquals(expectedKey, actualKey);
+    }
+
+    @Test
     void testGetSystemEnv() {
         String expectedKey = System.getenv("RAPIDAPI_API_KEY");
-        String actualKey = translator.getApiKey();
+        String actualKey = translator.getApiKeyFromSystem();
 
         assertEquals(expectedKey, actualKey);
     }
