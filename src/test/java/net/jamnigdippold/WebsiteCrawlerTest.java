@@ -211,23 +211,9 @@ class WebsiteCrawlerTest {
         doCallRealMethod().when(mock).outputCrawledLink(anyString(), anyBoolean());
         doCallRealMethod().when(mock).outputDepthIndicator(anyInt());
         doCallRealMethod().when(mock).recursivelyCrawlLinkedWebsites();
-        doCallRealMethod().when(mock).waitForCrawlerThreads();
-        doCallRealMethod().when(mock).appendOutputFromRecursiveCrawlers();
         doCallRealMethod().when(mock).getOutput();
-        doCallRealMethod().when(mock).startNewCrawler(any());
         doCallRealMethod().when(mock).outputInput();
         doCallRealMethod().when(mock).run();
-    }
-
-    @Test
-    void testWaitForCrawlerThreadsException() throws InterruptedException {
-        WebsiteCrawler mockedCrawler = mock(WebsiteCrawler.class);
-        doThrow(InterruptedException.class).when(mockedCrawler).join();
-        webCrawler.setRecursiveCrawlers(new ArrayList<>(List.of(mockedCrawler)));
-
-        webCrawler.waitForCrawlerThreads();
-
-        assertEquals("Error whilst joining crawler threads: java.lang.InterruptedException", logger.getErrorLog().get(0));
     }
 
     @Test

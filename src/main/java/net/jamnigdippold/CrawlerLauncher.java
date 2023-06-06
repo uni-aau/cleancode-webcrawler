@@ -5,7 +5,7 @@ import java.util.List;
 
 public class CrawlerLauncher {
     private static final Logger logger = ErrorLogger.getInstance();
-    private final List<WebsiteCrawler> crawlers;
+    private List<WebsiteCrawler> crawlers;
 
     public CrawlerLauncher() {
         crawlers = new ArrayList<>();
@@ -22,7 +22,7 @@ public class CrawlerLauncher {
             try {
                 crawler.join();
             } catch (InterruptedException e) {
-                logger.logError("Error whilst joining crawler threads: " + e.getMessage());
+                logger.logError("Error whilst joining crawler threads: " + e);
             }
         }
     }
@@ -33,5 +33,9 @@ public class CrawlerLauncher {
             output.append(crawler.getOutput());
         }
         return output.toString();
+    }
+
+    protected void setCrawlers(List<WebsiteCrawler> crawlers) {
+        this.crawlers = crawlers;
     }
 }

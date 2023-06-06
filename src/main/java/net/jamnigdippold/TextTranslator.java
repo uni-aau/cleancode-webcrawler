@@ -61,7 +61,7 @@ public class TextTranslator implements Translator {
         try {
             return httpClient.executeRequest(translationApiRequest);
         } catch (IOException e) {
-            logger.logError("Error while executing translation request: " + e.getMessage());
+            logger.logError("Error while executing translation request: " + e);
             return generateDefaultResponse(translationApiRequest);
         }
     }
@@ -81,9 +81,9 @@ public class TextTranslator implements Translator {
         try {
             return extractTranslation(apiResponse, input);
         } catch (IOException e) {
-            logger.logError("Error while trying to extract translated text: " + e.getMessage());
+            logger.logError("Error while trying to extract translated text: " + e);
         } catch (NullPointerException e) {
-            logger.logError("Error while trying to extract translated text, the Json format is incorrect: " + e.getMessage());
+            logger.logError("Error while trying to extract translated text, the Json format is incorrect: " + e);
         }
         return input; // TODO good enough?
     }
@@ -104,7 +104,7 @@ public class TextTranslator implements Translator {
         try {
             return node.get("status").asText().equals("success");
         } catch (NullPointerException e) {
-            logger.logError("Error while checking the success status of node: " + e.getMessage());
+            logger.logError("Error while checking the success status of node: " + e);
         }
         return false;
     }
@@ -113,9 +113,9 @@ public class TextTranslator implements Translator {
         try {
             return tryToExtractLanguageCode(apiResponse);
         } catch (IOException e) {
-            logger.logError("Error while trying to extract language code: " + e.getMessage());
+            logger.logError("Error while trying to extract language code: " + e);
         } catch (NullPointerException e) {
-            logger.logError("Error while trying to extract language code, the Json format is incorrect: " + e.getMessage());
+            logger.logError("Error while trying to extract language code, the Json format is incorrect: " + e);
         }
         return "auto";
     }

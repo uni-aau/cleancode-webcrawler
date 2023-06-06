@@ -17,6 +17,8 @@ public class ThreadOrganizer {
         this.depthsOfRecursiveSearch = depthsOfRecursiveSearch;
         this.languageCodes = languageCodes;
         this.outputPath = outputPath;
+        this.output = "";
+        this.launcher = new CrawlerLauncher();
     }
 
     public void startConcurrentCrawling() {
@@ -27,7 +29,6 @@ public class ThreadOrganizer {
     }
 
     protected void startCrawlers() {
-        launcher = new CrawlerLauncher();
         for (int i = 0; i < websiteUrls.length; i++) {
             launcher.startNewCrawler(websiteUrls[i], depthsOfRecursiveSearch[i], languageCodes[i], 0);
         }
@@ -47,12 +48,15 @@ public class ThreadOrganizer {
         try (FileWriter writer = new FileWriter(outputPath)) {
             writer.write(output);
         } catch (IOException e) {
-            logger.logError("Error while closing file writer " + e);
+            logger.logError("Error while closing file writer: " + e);
         }
-        System.out.println("Finished crawling process");
     }
 
     protected String getOutput() {
         return output;
+    }
+
+    protected void setLauncher(CrawlerLauncher launcher) {
+        this.launcher = launcher;
     }
 }
