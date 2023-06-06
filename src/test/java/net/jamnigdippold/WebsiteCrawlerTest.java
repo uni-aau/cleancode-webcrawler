@@ -253,7 +253,7 @@ class WebsiteCrawlerTest {
 
         webCrawler.initializeTranslator();
 
-        assertEquals("de", ((TextTranslator) webCrawler.getTranslator()).getTargetLanguage()); // Todo casting?
+        assertEquals("de", ((TextTranslator) webCrawler.getTranslator()).getTargetLanguage());
     }
 
 
@@ -293,17 +293,6 @@ class WebsiteCrawlerTest {
     void mockGetSourceLanguage() {
         webCrawler.setTranslator(translator);
         doReturn("de").when(translator).getSourceLanguage();
-    }
-
-    // @Test TODO: figure out SourceLanguage
-    void testSetSourceLanguage() {
-        mockGetSourceLanguage();
-
-//        webCrawler.setSourceLanguage();
-
-        assertEquals("de", webCrawler.getSourceLanguage());
-//        verify(translator).setTranslationSourceLanguage(any());
-        verify(translator).getSourceLanguage();
     }
 
     @Test
