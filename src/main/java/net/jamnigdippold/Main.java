@@ -5,23 +5,27 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.util.*;
 
 public class Main {
-    public static String websiteUrl;
+    public static int urlInputAmount;
+    public static String[] websiteUrls;
     public static int depthOfRecursiveSearch;
+    public static int[] depthsOfRecursiveSearch;
     public static String languageCode;
+    public static String[] languageCodes;
     public static String outputPath;
     public static Scanner inputScanner;
     public static JFileChooser fileChooser;
     public static int fileChooserStatus;
+    public static ThreadOrganizer threadOrganizer;
 
     public static void main(String[] args) {
         getUserInput();
-        WebsiteCrawler crawler = createCrawler();
-        crawler.startCrawling();
+        createThreadOrganizer();
+        threadOrganizer.startConcurrentCrawling();
         System.exit(0);
     }
 
-    public static WebsiteCrawler createCrawler() {
-        return new WebsiteCrawler(websiteUrl, depthOfRecursiveSearch, languageCode, outputPath);
+    public static void createThreadOrganizer() {
+        threadOrganizer = new ThreadOrganizer(websiteUrls, depthsOfRecursiveSearch, languageCodes, outputPath);
     }
 
     private static void closeScanner() {
@@ -34,30 +38,21 @@ public class Main {
 
     protected static void getUserInput() {
         setupScanner();
-        getWebsiteInput();
-        getDepthInput();
-        getLanguageInput();
+        getAmountOfCrawlingWebsites();
+        getMultipleWebsiteUrlInputs();
+        getMultipleCrawlingDepthInputs();
+        getMultipleLanguageInputs();
         getOutputFileInput();
         closeScanner();
     }
 
-    public static void getWebsiteInput() {
-        System.out.println("Enter the website url that should be crawled");
-        websiteUrl = inputScanner.nextLine();
-
-        while (WebsiteCrawler.isBrokenLink(websiteUrl)) {
-            System.err.println("ERROR: Cannot connect to url, please enter a valid url");
-            websiteUrl = inputScanner.nextLine();
-        }
-    }
-
-    public static void getDepthInput() {
+    public static void getAmountOfCrawlingWebsites() {
         boolean value = true;
-        System.out.println("Enter the depth of search (how many additional Links should be analyzed)");
+        System.out.println("Enter the amount of website urls that should be crawled");
 
         while (value) {
             try {
-                value = tryToGetDepthInput();
+                value = tryToGetAmountOfCrawlingWebsites();
             } catch (InputMismatchException e) {
                 System.err.println("ERROR: Please enter a valid number.");
                 inputScanner.nextLine();
@@ -66,7 +61,65 @@ public class Main {
         inputScanner.nextLine();
     }
 
-    private static boolean tryToGetDepthInput() {
+    public static boolean tryToGetAmountOfCrawlingWebsites() {
+        urlInputAmount = inputScanner.nextInt();
+        if (urlInputAmount < 1) {
+            System.err.println("ERROR: Please enter a valid url amount greater than zero!");
+            return true;
+        }
+        return false;
+    }
+
+    public static void getMultipleWebsiteUrlInputs() {
+        websiteUrls = new String[urlInputAmount];
+        int currentUrl = 0;
+
+        while (currentUrl < urlInputAmount) {
+            String url = getInputUrl(currentUrl + 1);
+            websiteUrls[currentUrl] = url;
+            currentUrl++;
+        }
+    }
+
+    public static String getInputUrl(int currentUrl) {
+        System.out.println("Enter the website URL that should be crawled " + currentUrl + "/" + urlInputAmount);
+        String url;
+        do {
+            url = inputScanner.nextLine();
+            if (WebsiteCrawler.isBrokenLink(url)) {
+                System.err.println("ERROR: Cannot connect to URL, please enter a valid URL");
+            }
+        } while (WebsiteCrawler.isBrokenLink(url));
+        return url;
+    }
+
+    public static void getMultipleCrawlingDepthInputs() {
+        depthsOfRecursiveSearch = new int[urlInputAmount];
+        int currentUrl = 0;
+
+        while (currentUrl < urlInputAmount) {
+            getCrawlingDepth(currentUrl + 1);
+            depthsOfRecursiveSearch[currentUrl] = depthOfRecursiveSearch;
+            currentUrl++;
+        }
+    }
+
+    public static void getCrawlingDepth(int currentUrl) {
+        System.out.println("Enter the depth of search (how many additional Links should be analyzed) " + currentUrl + "/" + urlInputAmount);
+        boolean value = true;
+
+        while (value) {
+            try {
+                value = tryToGetCrawlingDepth();
+            } catch (InputMismatchException e) {
+                System.err.println("ERROR: Please enter a valid number.");
+                inputScanner.nextLine();
+            }
+        }
+        inputScanner.nextLine();
+    }
+
+    private static boolean tryToGetCrawlingDepth() {
         depthOfRecursiveSearch = inputScanner.nextInt();
         if (depthOfRecursiveSearch < 0) {
             System.err.println("ERROR: Please enter a positive number.");
@@ -76,8 +129,19 @@ public class Main {
         return true;
     }
 
-    public static void getLanguageInput() {
-        System.out.println("Please enter the language code for the language into which the headers should be translated [e.g. de]");
+    public static void getMultipleLanguageInputs() {
+        languageCodes = new String[urlInputAmount];
+        int currentUrl = 0;
+
+        while (currentUrl < urlInputAmount) {
+            getLanguageCode(currentUrl + 1);
+            languageCodes[currentUrl] = languageCode;
+            currentUrl++;
+        }
+    }
+
+    public static void getLanguageCode(int currentUrl) {
+        System.out.println("Please enter the language code for the language into which the headers should be translated [e.g. de] " + currentUrl + "/" + urlInputAmount);
         languageCode = inputScanner.nextLine();
 
         while (!isValidLanguageCode(languageCode)) {

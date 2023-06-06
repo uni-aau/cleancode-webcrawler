@@ -5,12 +5,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WebsiteCrawler {
+public class WebsiteCrawler extends Thread {
+    private static final Logger logger = ErrorLogger.getInstance();
     private String websiteUrl;
     private int maxDepthOfRecursiveSearch;
     private int currentDepthOfRecursiveSearch;
@@ -19,16 +19,15 @@ public class WebsiteCrawler {
     private List<String> crawledLinks;
     private String sourceLanguage;
     private String targetLanguage;
-    private FileWriter fileWriter;
-    private TextTranslator translator;
+    private StringBuilder output;
+    private Translator translator;
 
-    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, String outputPath) {
-        createFileWriter(outputPath);
-        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0, fileWriter);
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage) {
+        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, 0);
     }
 
-    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
-        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch, writer);
+    public WebsiteCrawler(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch) {
+        initializeValues(websiteUrl, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch);
     }
 
     protected static boolean isBrokenLink(String crawledLink) {
@@ -40,42 +39,46 @@ public class WebsiteCrawler {
         }
     }
 
-    protected void createFileWriter(String outputPath) {
-        try {
-            fileWriter = new FileWriter(outputPath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch, FileWriter writer) {
+    protected void initializeValues(String websiteUrl, int maxDepthOfRecursiveSearch, String targetLanguage, int currentDepthOfRecursiveSearch) {
         this.websiteUrl = websiteUrl;
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
         this.targetLanguage = targetLanguage;
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
-        this.fileWriter = writer;
         this.sourceLanguage = "auto";
+        this.output = new StringBuilder();
+    }
+
+    @Override
+    public void run() {
+        if (!isBrokenLink(websiteUrl)) {
+            if (currentDepthOfRecursiveSearch > maxDepthOfRecursiveSearch)
+                outputCrawledLink(websiteUrl, false);
+            else
+                startCrawling();
+        } else
+            outputCrawledLink(websiteUrl, true);
     }
 
     public void startCrawling() {
         establishConnection();
         crawlHeadlines();
         initializeTranslator();
-        setSourceLanguage();
-        printInput();
-        printCrawledHeadlines();
+        detectSourceLanguage();
+        outputInput();
+        outputCrawledHeadlines();
         crawlWebsiteLinks();
-        recursivelyPrintCrawledWebsites();
-        closeWriter();
+        recursivelyCrawlLinkedWebsites();
     }
 
-    protected void printInput() {
+    protected void outputInput() {
         if (currentDepthOfRecursiveSearch == 0) {
-            printString("input: <a>" + websiteUrl + "</a>\n");
-            printString("<br>depth: " + maxDepthOfRecursiveSearch + "\n");
-            printString("<br>source language: " + sourceLanguage + "\n");
-            printString("<br>Target language: " + targetLanguage + "\n");
-            printString("<br>summary:\n");
+            output.append("input: <a>").append(websiteUrl).append("</a>\n");
+            output.append("<br>depth: ").append(maxDepthOfRecursiveSearch).append("\n");
+            output.append("<br>source language: ").append(sourceLanguage).append("\n");
+            output.append("<br>Target language: ").append(targetLanguage).append("\n");
+            output.append("<br>summary:\n");
+        } else {
+            outputCrawledLink(websiteUrl, false);
         }
     }
 
@@ -83,7 +86,7 @@ public class WebsiteCrawler {
         try {
             websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
         } catch (IOException e) {
-            throw new RuntimeException();
+            logger.logError("Error whilst connecting to websiteUrl " + websiteUrl + ": " + e);
         }
     }
 
@@ -99,18 +102,14 @@ public class WebsiteCrawler {
         }
     }
 
-
-    // Hint: To uphold desired output format,
-    // start new crawler & print links should happen here
-    protected void recursivelyPrintCrawledWebsites() {
+    protected void recursivelyCrawlLinkedWebsites() {
+        CrawlerLauncher launcher = new CrawlerLauncher();
         for (String crawledLink : crawledLinks) {
             crawledLink = convertRelativeUrlToAbsoluteURL(crawledLink);
-            boolean isBrokenLink = isBrokenLink(crawledLink);
-            printCrawledLink(crawledLink, isBrokenLink);
-            if (!isBrokenLink) {
-                startNewCrawler(crawledLink);
-            }
+            launcher.startNewCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1);
         }
+        launcher.waitForCrawlerThreadsToFinish();
+        output.append(launcher.getOutputFromCrawlers());
     }
 
     protected String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
@@ -121,39 +120,32 @@ public class WebsiteCrawler {
         return absoluteUrl;
     }
 
-    private void startNewCrawler(String crawledLink) {
-        if (currentDepthOfRecursiveSearch < maxDepthOfRecursiveSearch) {
-            WebsiteCrawler recursiveCrawler = new WebsiteCrawler(crawledLink, maxDepthOfRecursiveSearch, targetLanguage, currentDepthOfRecursiveSearch + 1, fileWriter);
-            recursiveCrawler.startCrawling();
-        }
-    }
-
     protected void initializeTranslator() {
-        translator = new TextTranslator(targetLanguage);
+        translator = new TextTranslator();
+        translator.setTargetLanguage(targetLanguage);
     }
 
-    protected void setSourceLanguage() {
-        translator.setTranslationSourceLanguage(crawledHeadlines);
-        sourceLanguage = translator.getSourceLanguage();
+    protected void detectSourceLanguage() {
+        sourceLanguage = translator.detectLanguage(crawledHeadlines.get(0).text());
     }
 
-    protected void printCrawledHeadlines() {
+    protected void outputCrawledHeadlines() {
         for (Element crawledHeadline : crawledHeadlines) {
-            printHeaderLevel(crawledHeadline);
+            outputHeaderLevel(crawledHeadline);
             if (currentDepthOfRecursiveSearch > 0) {
-                printDepthIndicator();
+                outputDepthIndicator(currentDepthOfRecursiveSearch);
             }
-            printString(translator.getTranslatedHeadline(crawledHeadline.text()) + "\n");
+            output.append(translator.translate(crawledHeadline.text()) + "\n");
         }
-        printString("\n");
+        output.append("\n");
     }
 
-    protected void printHeaderLevel(Element crawledHeadline) {
+    protected void outputHeaderLevel(Element crawledHeadline) {
         int numOfHeader = getHeaderLevelFromName(crawledHeadline.normalName());
         for (int i = 0; i < numOfHeader; i++) {
-            printString("#");
+            output.append("#");
         }
-        printString(" ");
+        output.append(" ");
     }
 
     protected int getHeaderLevelFromName(String headerLevelName) {
@@ -162,46 +154,20 @@ public class WebsiteCrawler {
         return Integer.parseInt(headerNumber);
     }
 
-    protected void printCrawledLink(String crawledLink, boolean isBrokenLink) {
-        printString("<br>--");
-        printDepthIndicator();
-        if (isBrokenLink) printString("broken link <a>");
-        else printString("link to <a>");
-        printString(crawledLink);
-        printString("</a>\n\n");
+    protected void outputCrawledLink(String crawledLink, boolean isBrokenLink) {
+        output.append("<br>--");
+        outputDepthIndicator(currentDepthOfRecursiveSearch - 1);
+        if (isBrokenLink) output.append("broken link <a>");
+        else output.append("link to <a>");
+        output.append(crawledLink);
+        output.append("</a>\n\n");
     }
 
-    protected void printDepthIndicator() {
-        for (int i = 0; i < currentDepthOfRecursiveSearch; i++) {
-            printString("--");
+    protected void outputDepthIndicator(int depth) {
+        for (int i = 0; i < depth; i++) {
+            output.append("--");
         }
-        printString("> ");
-    }
-
-    protected void printString(String printable) {
-        System.out.print(printable);
-        try {
-            fileWriter.write(printable);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected void closeWriter() {
-        try {
-            tryCloseWriter();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected void tryCloseWriter() throws IOException {
-        if (currentDepthOfRecursiveSearch == 0)
-            fileWriter.close();
-    }
-
-    public void flushWriter() throws IOException {
-        fileWriter.flush();
+        output.append("> ");
     }
 
     public Elements getCrawledHeadlines() {
@@ -228,14 +194,6 @@ public class WebsiteCrawler {
         this.currentDepthOfRecursiveSearch = currentDepthOfRecursiveSearch;
     }
 
-    public FileWriter getFileWriter() {
-        return fileWriter;
-    }
-
-    public void setFileWriter(FileWriter fileWriter) {
-        this.fileWriter = fileWriter;
-    }
-
     public void setMaxDepthOfRecursiveSearch(int maxDepthOfRecursiveSearch) {
         this.maxDepthOfRecursiveSearch = maxDepthOfRecursiveSearch;
     }
@@ -260,11 +218,11 @@ public class WebsiteCrawler {
         this.targetLanguage = targetLanguage;
     }
 
-    public void setTranslator(TextTranslator translator) {
+    public void setTranslator(Translator translator) {
         this.translator = translator;
     }
 
-    public TextTranslator getTranslator() {
+    public Translator getTranslator() {
         return translator;
     }
 
@@ -274,5 +232,13 @@ public class WebsiteCrawler {
 
     public void setWebsiteUrl(String websiteUrl) {
         this.websiteUrl = websiteUrl;
+    }
+
+    public String getOutput() {
+        return output.toString();
+    }
+
+    public void setUpOutput() {
+        output = new StringBuilder();
     }
 }

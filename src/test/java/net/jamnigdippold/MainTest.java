@@ -49,10 +49,13 @@ class MainTest {
     }
 
     private void resetMainField() {
-        Main.websiteUrl = null;
+        Main.websiteUrls = null;
         Main.depthOfRecursiveSearch = -1;
+        Main.depthsOfRecursiveSearch = null;
+        Main.languageCodes = null;
         Main.languageCode = null;
         Main.outputPath = null;
+        Main.urlInputAmount = -1;
     }
 
     private void closeMocks() {
@@ -73,31 +76,69 @@ class MainTest {
     void testMain() {
         mockedMain = Mockito.mockStatic(Main.class);
         mockedMain.when(() -> Main.main(new String[0])).thenCallRealMethod();
-        mockedMain.when(Main::createCrawler).thenCallRealMethod();
-        MockedConstruction<WebsiteCrawler> mockedConstruction = mockConstruction(WebsiteCrawler.class, (websiteCrawler, context) -> {
-            doCallRealMethod().when(websiteCrawler).startCrawling();
-        });
+        mockedMain.when(Main::createThreadOrganizer).thenCallRealMethod();
+        MockedConstruction<ThreadOrganizer> mockedConstruction = mockConstruction(ThreadOrganizer.class);
         mockSystemExit();
 
         assertThrows(RuntimeException.class, () -> Main.main(new String[0]), "SecurityException: Tried to exit with status 0");
 
-        verify(mockedConstruction.constructed().get(0)).startCrawling();
+        verify(mockedConstruction.constructed().get(0)).startConcurrentCrawling();
         mockedMain.verify(Main::getUserInput);
 
         mockedConstruction.close();
     }
 
     @Test
+    void testGetAmountOfCrawlingWebsites() {
+        mockInputScanner("1\n");
+
+        Main.getAmountOfCrawlingWebsites();
+
+        assertEquals("Enter the amount of website urls that should be crawled" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("", errContent.toString());
+        assertEquals(1, Main.urlInputAmount);
+    }
+
+    @Test
+    void testGetAmountOfCrawlingWebsitesInputMismatch() {
+        mockInputScanner("Number\n-1\n1\n");
+
+        Main.getAmountOfCrawlingWebsites();
+
+        assertEquals("Enter the amount of website urls that should be crawled" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("ERROR: Please enter a valid number." + System.getProperty("line.separator") + "ERROR: Please enter a valid url amount greater than zero!" + System.getProperty("line.separator"), errContent.toString());
+        assertEquals(1, Main.urlInputAmount);
+    }
+
+    @Test
     void testGetUserInput() {
         mockJFileChooser(0, "TestFile");
-        mockSetupScanner("https://example.com\n3\nen\n");
+        mockSetupScanner("1\nhttps://example.com\n3\nen\n");
         mockIsBrokenLink();
 
         Main.getUserInput();
 
-        assertEquals("https://example.com", Main.websiteUrl);
-        assertEquals(3, Main.depthOfRecursiveSearch);
-        assertEquals("en", Main.languageCode);
+        assertEquals(1, Main.urlInputAmount);
+        assertArrayEquals(new String[]{"https://example.com"}, Main.websiteUrls);
+        assertArrayEquals(new int[]{3}, Main.depthsOfRecursiveSearch);
+        assertArrayEquals(new String[]{"en"}, Main.languageCodes);
+        assertEquals("TestFile.md", Main.outputPath);
+
+        assertThrows(IllegalStateException.class, () -> Main.inputScanner.next());
+    }
+
+    @Test
+    void testGetUserMultipleUrlInputs() {
+        mockJFileChooser(0, "TestFile");
+        mockSetupScanner("2\nhttps://example.com\nhttps://example.com\n2\n3\nde\nen\n");
+        mockIsBrokenLink();
+
+        Main.getUserInput();
+
+        assertEquals(2, Main.urlInputAmount);
+        assertArrayEquals(new String[]{"https://example.com", "https://example.com"}, Main.websiteUrls);
+        assertArrayEquals(new int[]{2, 3}, Main.depthsOfRecursiveSearch);
+        assertArrayEquals(new String[]{"de", "en"}, Main.languageCodes);
         assertEquals("TestFile.md", Main.outputPath);
 
         assertThrows(IllegalStateException.class, () -> Main.inputScanner.next());
@@ -221,60 +262,64 @@ class MainTest {
 
     @Test
     void testGetLanguageInput() {
+        Main.urlInputAmount = 1;
         mockInputScanner("en");
 
-        Main.getLanguageInput();
+        Main.getMultipleLanguageInputs();
 
         assertTestGetLanguage();
     }
 
     private void assertTestGetLanguage() {
-        assertEquals("Please enter the language code for the language into which the headers should be translated [e.g. de]" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("Please enter the language code for the language into which the headers should be translated [e.g. de] 1/1" + System.getProperty("line.separator"), outContent.toString());
         assertEquals("", errContent.toString());
         assertEquals("en", Main.languageCode);
     }
 
     @Test
     void testGetLanguageInputError() {
+        Main.urlInputAmount = 1;
         mockInputScanner("Not a language code\nef\nen");
 
-        Main.getLanguageInput();
+        Main.getMultipleLanguageInputs();
 
         assertTestGetLanguageError();
     }
 
     private void assertTestGetLanguageError() {
-        assertEquals("Please enter the language code for the language into which the headers should be translated [e.g. de]" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("Please enter the language code for the language into which the headers should be translated [e.g. de] 1/1" + System.getProperty("line.separator"), outContent.toString());
         assertEquals("ERROR: Please enter a valid language code." + System.getProperty("line.separator") + "ERROR: Please enter a valid language code." + System.getProperty("line.separator"), errContent.toString());
         assertEquals("en", Main.languageCode);
     }
 
     @Test
     void testGetDepthInput() {
+        Main.urlInputAmount = 1;
         mockInputScanner("3\n");
 
-        Main.getDepthInput();
+        Main.getMultipleCrawlingDepthInputs();
 
         assertTestGetDepthInput();
     }
 
     private void assertTestGetDepthInput() {
-        assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("Enter the depth of search (how many additional Links should be analyzed) 1/1" + System.getProperty("line.separator"), outContent.toString());
         assertEquals("", errContent.toString());
         assertEquals(3, Main.depthOfRecursiveSearch);
     }
 
     @Test
     void testGetDepthInputError() {
+        Main.urlInputAmount = 1;
         mockInputScanner("Number\n-1\n-2\n-10\n0\n");
 
-        Main.getDepthInput();
+        Main.getMultipleCrawlingDepthInputs();
 
         assertTestGetDepthInputError();
     }
 
     private void assertTestGetDepthInputError() {
-        assertEquals("Enter the depth of search (how many additional Links should be analyzed)" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("Enter the depth of search (how many additional Links should be analyzed) 1/1" + System.getProperty("line.separator"), outContent.toString());
         assertEquals("ERROR: Please enter a valid number." + System.getProperty("line.separator")
                 + "ERROR: Please enter a positive number." + System.getProperty("line.separator")
                 + "ERROR: Please enter a positive number." + System.getProperty("line.separator")
@@ -286,31 +331,33 @@ class MainTest {
     void testGetWebsiteInput() {
         setUpTestGetWebsiteInput("https://example.com\n");
 
-        Main.getWebsiteInput();
+        Main.urlInputAmount = 1;
+        Main.getMultipleWebsiteUrlInputs();
 
         assertTestGetWebsiteInput();
     }
 
     private void assertTestGetWebsiteInput() {
-        assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("Enter the website URL that should be crawled 1/1" + System.getProperty("line.separator"), outContent.toString());
         assertEquals("", errContent.toString());
-        assertEquals("https://example.com", Main.websiteUrl);
-        mockedCrawler.verify(() -> WebsiteCrawler.isBrokenLink("https://example.com"));
+        assertArrayEquals(new String[]{"https://example.com"}, Main.websiteUrls);
+        mockedCrawler.verify(() -> WebsiteCrawler.isBrokenLink("https://example.com"), times(2));
     }
 
     @Test
     void testGetWebsiteInputError() {
         setUpTestGetWebsiteInput("wrong URL format\nhttps://www.notARealWebsite.com\nhttps://example.com\n");
 
-        Main.getWebsiteInput();
+        Main.urlInputAmount = 1;
+        Main.getMultipleWebsiteUrlInputs();
 
         assertTestGetWebsiteInputError();
     }
 
     private void assertTestGetWebsiteInputError() {
-        assertEquals("Enter the website url that should be crawled" + System.getProperty("line.separator"), outContent.toString());
-        assertEquals("ERROR: Cannot connect to url, please enter a valid url" + System.getProperty("line.separator") + "ERROR: Cannot connect to url, please enter a valid url" + System.getProperty("line.separator"), errContent.toString());
-        assertEquals("https://example.com", Main.websiteUrl);
+        assertEquals("Enter the website URL that should be crawled 1/1" + System.getProperty("line.separator"), outContent.toString());
+        assertEquals("ERROR: Cannot connect to URL, please enter a valid URL" + System.getProperty("line.separator") + "ERROR: Cannot connect to URL, please enter a valid URL" + System.getProperty("line.separator"), errContent.toString());
+        assertArrayEquals(new String[]{"https://example.com"}, Main.websiteUrls);
     }
 
     private void setUpTestGetWebsiteInput(String testInput) {

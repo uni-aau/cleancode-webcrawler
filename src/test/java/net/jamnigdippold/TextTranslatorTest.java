@@ -1,8 +1,11 @@
 package net.jamnigdippold;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import okhttp3.*;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -18,45 +21,119 @@ class TextTranslatorTest {
     private static TextTranslator translator;
     private FormBody expectedBody;
     private Request expectedRequest;
+    private final Logger logger = ErrorLogger.getInstance();
     @Mock
     Request mockedRequest;
     @Mock
-    OkHttpClient mockedClient;
+    OkHttpWrapper mockedClient;
     @Mock
     Response mockedResponse;
     @Mock
     ResponseBody mockedResponseBody;
-    @Mock
-    Call mockedCall;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        translator = spy(new TextTranslator("de"));
+        translator = spy(new TextTranslator());
+        translator.setTargetLanguage("de");
     }
 
+    @AfterEach
+    public void teardown() {
+        logger.clearLog();
+    }
+
+    @Test
+    void testDetectLanguage() {
+        doReturn("de").when(translator).getLanguageCodeFromHeadline("Überschrift h1");
+
+        String detectedCode = translator.detectLanguage("Überschrift h1");
+
+        Assertions.assertEquals("de", detectedCode);
+        verify(translator).detectLanguage(any());
+    }
+
+    @Test
+    void testCheckNoteSuccessStatus() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"success\"}";
+        mockResponseExtraction(expectedResponseOutput);
+        JsonNode node = translator.createNode(mockedResponse);
+
+        boolean result = translator.checkNodeSuccessStatus(node);
+
+        assertTrue(result);
+    }   @Test
+    void testCheckNoteSuccessStatusNoSuccess() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"error\"}";
+        mockResponseExtraction(expectedResponseOutput);
+        JsonNode node = translator.createNode(mockedResponse);
+
+        boolean result = translator.checkNodeSuccessStatus(node);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testCheckNoteSuccessStatusNoStatusField() throws IOException {
+        String expectedResponseOutput = "{\n\"error\": \"No Status Field here\"}";
+        mockResponseExtraction(expectedResponseOutput);
+        JsonNode node = translator.createNode(mockedResponse);
+
+        boolean result = translator.checkNodeSuccessStatus(node);
+
+        assertFalse(result);
+        assertEquals("Error while checking the success status of node: API-Response:{\"error\":\"No Status Field here\"}", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testCheckNoteSuccessStatusException() {
+        JsonNode node = mock(JsonNode.class);
+        doThrow(new NullPointerException()).when(node).get(any());
+
+        boolean result = translator.checkNodeSuccessStatus(node);
+
+        assertFalse(result);
+        assertEquals("Error while checking the success status of node: java.lang.NullPointerException", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testTranslate() {
+        String input = "Headline";
+        String expectedTranslation = "Überschrift";
+        doNothing().when(translator).setSourceLanguage(input);
+        doReturn(expectedTranslation).when(translator).getTranslatedHeadline(input);
+
+        String result = translator.translate(input);
+
+        assertEquals(expectedTranslation, result);
+        verify(translator).setSourceLanguage(input);
+        verify(translator).getTranslatedHeadline(input);
+    }
 
     @Test
     void testCorrectSettingOfSourceLanguageEnglish() throws IOException {
         String expectedSourceLanguage = "en";
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
-        Elements crawledHeadlines = addElements();
+        String headlineText = "Heading h1";
+
         mockResponseExtraction(expectedResponseOutput);
         doReturn(mockedResponse).when(translator).executeAPIRequest("Heading h1");
 
-        translator.setTranslationSourceLanguage(crawledHeadlines);
+        translator.setSourceLanguage(headlineText);
 
         assertEquals(expectedSourceLanguage, translator.getSourceLanguage());
     }
+
     @Test
     void testSetSourceLanguageNoHeadlines() throws IOException {
         String expectedSourceLanguage = "auto";
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
-        Elements crawledHeadlines = new Elements();
+        String headlineText = "";
+
         mockResponseExtraction(expectedResponseOutput);
         doReturn(mockedResponse).when(translator).executeAPIRequest("Heading h1");
 
-        translator.setTranslationSourceLanguage(crawledHeadlines);
+        translator.setSourceLanguage(headlineText);
 
         assertEquals(expectedSourceLanguage, translator.getSourceLanguage());
     }
@@ -83,10 +160,13 @@ class TextTranslatorTest {
 
     @Test
     void testTranslationRequestExecutionError() throws IOException {
-        mockNewClientCall();
-        doThrow(new IOException()).when(mockedCall).execute();
+        when(mockedClient.executeRequest(any())).thenThrow(new IOException("Unspecified Exception"));
 
-        assertThrows(RuntimeException.class, () -> translator.executeTranslationApiRequest(mockedRequest));
+        translator.setClient(mockedClient);
+        Response response = translator.executeTranslationApiRequest(mockedRequest);
+
+        assertEquals("Error while executing translation request: java.io.IOException: Unspecified Exception", logger.getErrorLog().get(0));
+        assertEquals(444, response.code());
     }
 
     @Test
@@ -95,7 +175,7 @@ class TextTranslatorTest {
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Überschrift h1\"\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
 
-        String actualReturnValue = translator.extractTranslatedText(mockedResponse);
+        String actualReturnValue = translator.extractTranslatedText(mockedResponse, "Headline 1");
 
         assertEquals(expectedReturnValue, actualReturnValue);
     }
@@ -104,9 +184,23 @@ class TextTranslatorTest {
     void testTranslatedTextExtractionError() throws IOException {
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
-        doThrow(new IOException()).when(mockedResponseBody).string();
+        doThrow(new IOException("Unspecified Exception")).when(mockedResponseBody).string();
 
-        assertThrows(RuntimeException.class, () -> translator.extractTranslatedText(mockedResponse));
+        String output = translator.extractTranslatedText(mockedResponse, "Headline 1");
+
+        assertEquals("Headline 1", output);
+        assertEquals("Error while trying to extract translated text: java.io.IOException: Unspecified Exception", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testTranslatedTextExtractionNullError() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"notRealDataField\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+
+        String output = translator.extractTranslatedText(mockedResponse, "Headline 1");
+
+        assertEquals("Headline 1", output);
+        assertEquals("Error while trying to extract translated text, the Json format is incorrect: java.lang.NullPointerException", logger.getErrorLog().get(0));
     }
 
     @Test
@@ -114,9 +208,9 @@ class TextTranslatorTest {
         String expectedResponseOutput = "{\n\"status\": \"error\",\n\"message\": \"source language cannot be the same as target language\"\n}";
         mockResponseExtraction(expectedResponseOutput);
 
-        String actualReturnValue = translator.extractTranslatedText(mockedResponse);
+        String actualReturnValue = translator.extractTranslatedText(mockedResponse, "Headline 1");
 
-        assertNull(actualReturnValue);
+        assertEquals("Headline 1", actualReturnValue);
     }
 
     @Test
@@ -134,9 +228,33 @@ class TextTranslatorTest {
     void testLanguageCodeExtractionError() throws IOException {
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
-        doThrow(new IOException()).when(mockedResponseBody).string();
+        doThrow(new IOException("Unspecified Exception")).when(mockedResponseBody).string();
 
-        assertThrows(RuntimeException.class, () -> translator.extractLanguageCode(mockedResponse));
+        String extractedCode = translator.extractLanguageCode(mockedResponse);
+
+        assertEquals("auto", extractedCode);
+        assertEquals("Error while trying to extract language code: java.io.IOException: Unspecified Exception", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testLanguageCodeExtractionNullError() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"notARealDataField\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+
+        String extractedCode = translator.extractLanguageCode(mockedResponse);
+
+        assertEquals("auto", extractedCode);
+        assertEquals("Error while trying to extract language code, the Json format is incorrect: java.lang.NullPointerException", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testLanguageCodeExtractionNoSuccess() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"failure\"\n}";
+        mockResponseExtraction(expectedResponseOutput);
+
+        String extractedCode = translator.extractLanguageCode(mockedResponse);
+
+        assertEquals("auto", extractedCode);
     }
 
     @Test
@@ -160,7 +278,7 @@ class TextTranslatorTest {
 
         String actualTranslatedHeadline = translator.getTranslatedHeadline("Heading h1");
 
-        assertEquals(expectedTranslatedHeadline, actualTranslatedHeadline);
+        assertEquals("Heading h1", actualTranslatedHeadline);
     }
 
     @Test
@@ -176,9 +294,27 @@ class TextTranslatorTest {
     }
 
     @Test
+    void testGetApiKey() {
+        doReturn("a real key").when(translator).getApiKeyFromSystem();
+        String actualKey = translator.getApiKey();
+
+        assertEquals("a real key", actualKey);
+    }
+
+    @Test
+    void testGetApiKeyNoKey() {
+        doReturn(null).when(translator).getApiKeyFromSystem();
+        String expectedKey = "invalid key";
+        String actualKey = translator.getApiKey();
+
+        assertEquals(expectedKey, actualKey);
+        assertEquals("No API-Key found in System environment!", logger.getErrorLog().get(0));
+    }
+
+    @Test
     void testGetSystemEnv() {
         String expectedKey = System.getenv("RAPIDAPI_API_KEY");
-        String actualKey = translator.getApiKey();
+        String actualKey = translator.getApiKeyFromSystem();
 
         assertEquals(expectedKey, actualKey);
     }
@@ -231,8 +367,7 @@ class TextTranslatorTest {
     }
 
     private void mockNewClientCall() throws IOException {
-        when(mockedClient.newCall(any())).thenReturn(mockedCall);
-        when(mockedCall.execute()).thenReturn(mockedResponse);
+        when(mockedClient.executeRequest(any())).thenReturn(mockedResponse);
         translator.setClient(mockedClient);
     }
 
