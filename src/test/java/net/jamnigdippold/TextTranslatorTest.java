@@ -120,7 +120,7 @@ class TextTranslatorTest {
         String expectedResponseOutput = "{\n\"status\": \"success\",\n\"data\": {\n\"translatedText\": \"Überschrift h1\"\n}\n}";
         mockResponseExtraction(expectedResponseOutput);
 
-        String actualReturnValue = translator.extractTranslatedText(mockedResponse);
+        String actualReturnValue = translator.extractTranslatedText(mockedResponse, "Headline 1");
 
         assertEquals(expectedReturnValue, actualReturnValue);
     }
@@ -131,7 +131,7 @@ class TextTranslatorTest {
         mockResponseExtraction(expectedResponseOutput);
         doThrow(new IOException()).when(mockedResponseBody).string();
 
-        translator.extractTranslatedText(mockedResponse);
+        translator.extractTranslatedText(mockedResponse, "Headline 1");
 
         assertEquals("Error while trying to extract translated text: java.io.IOException", logger.getErrorLog().get(0));
     }
@@ -141,7 +141,7 @@ class TextTranslatorTest {
         String expectedResponseOutput = "{\n\"status\": \"error\",\n\"message\": \"source language cannot be the same as target language\"\n}";
         mockResponseExtraction(expectedResponseOutput);
 
-        String actualReturnValue = translator.extractTranslatedText(mockedResponse);
+        String actualReturnValue = translator.extractTranslatedText(mockedResponse, "Headline 1");
 
         assertEquals("", actualReturnValue);
     }

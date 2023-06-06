@@ -2,10 +2,7 @@ package net.jamnigdippold;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.FormBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 
 import java.io.IOException;
 
@@ -64,21 +61,32 @@ public class TextTranslator implements Translator {
         try {
             return httpClient.executeRequest(translationApiRequest);
         } catch (IOException e) {
-            logger.logError("Error while executing translation request: " + e);
-            return null; // TODO
+            logger.logError("Error while executing translation request: " + e.getMessage());
+            return generateDefaultResponse();
         }
     }
 
-    protected String extractTranslatedText(Response apiResponse) {
+    protected Response generateDefaultResponse() {
+        ResponseBody responseBody = ResponseBody.create(MediaType.parse("application/json"), "{\"status\":\"failure\"}");
+        return new Response.Builder()
+                .code(444)
+                .message("no response")
+                .body(responseBody)
+                .build();
+    }
+
+    protected String extractTranslatedText(Response apiResponse, String input) {
         try {
-            return extractTranslation(apiResponse);
+            return extractTranslation(apiResponse, input);
         } catch (IOException e) {
-            logger.logError("Error while trying to extract translated text: " + e);
+            logger.logError("Error while trying to extract translated text: " + e.getMessage());
+        } catch (NullPointerException e) {
+            logger.logError("Error while trying to extract translated text, the Json format is incorrect: " + e.getMessage());
         }
-        return ""; // TODO
+        return input; // TODO good enough?
     }
 
-    protected String extractTranslation(Response apiResponse) throws IOException {
+    protected String extractTranslation(Response apiResponse, String input) throws IOException, NullPointerException {
         JsonNode node;
 
         node = createNode(apiResponse);
@@ -86,7 +94,7 @@ public class TextTranslator implements Translator {
         if (checkNodeSuccessStatus(node)) {
             return node.get("data").get("translatedText").asText();
         } else {
-            return ""; // TODO
+            return input; // TODO good enough?
         }
     }
 
@@ -94,7 +102,7 @@ public class TextTranslator implements Translator {
         try {
             return node.get("status").asText().equals("success");
         } catch (NullPointerException e) {
-            logger.logError("Error while checking the success status of node: " + e);
+            logger.logError("Error while checking the success status of node: " + e.getMessage());
         }
         return false;
     }
@@ -103,23 +111,20 @@ public class TextTranslator implements Translator {
         try {
             return tryToExtractLanguageCode(apiResponse);
         } catch (IOException e) {
-            logger.logError("Error while trying to extract language code: " + e);
-            return "";
+            logger.logError("Error while trying to extract language code: " + e.getMessage());
+        } catch (NullPointerException e) {
+            logger.logError("Error while trying to extract language code, the Json format is incorrect: " + e.getMessage());
         }
+        return "auto";
     }
 
-    protected String tryToExtractLanguageCode(Response apiResponse) throws IOException {
-        String extractedLanguageCode = "";
-        JsonNode node;
-
-        node = createNode(apiResponse);
-
-        try {
-            extractedLanguageCode = node.get("data").get("detectedSourceLanguage").get("code").asText();
-        } catch (NullPointerException e) {
-            logger.logError("NullPointerException while trying to extract language code: " + e); // todo kombinieren mit ioexception?
+    protected String tryToExtractLanguageCode(Response apiResponse) throws IOException, NullPointerException {
+        JsonNode node = createNode(apiResponse);
+        if (checkNodeSuccessStatus(node)) {
+            return node.get("data").get("detectedSourceLanguage").get("code").asText();
+        } else {
+            return "auto";
         }
-        return extractedLanguageCode;
     }
 
     private JsonNode createNode(Response apiResponse) throws IOException {
@@ -132,11 +137,7 @@ public class TextTranslator implements Translator {
 
     protected String getTranslatedHeadline(String crawledHeadlineText) {
         Response apiResponse = executeAPIRequest(crawledHeadlineText);
-        String translatedString = extractTranslatedText(apiResponse);
-        if (translatedString == null)
-            translatedString = crawledHeadlineText;
-
-        return translatedString;
+        return extractTranslatedText(apiResponse, crawledHeadlineText);
     }
 
     protected String getLanguageCodeFromHeadline(String crawledHeadlineText) {
