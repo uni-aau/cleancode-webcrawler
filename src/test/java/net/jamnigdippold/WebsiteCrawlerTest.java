@@ -126,11 +126,22 @@ class WebsiteCrawlerTest {
         verify(webCrawler).establishConnection();
         verify(webCrawler).crawlHeadlines();
         verify(webCrawler).initializeTranslator();
-        // verify(webCrawler).setSourceLanguage();
+        verify(webCrawler).detectSourceLanguage();
         verify(webCrawler).outputInput();
         verify(webCrawler).outputCrawledHeadlines();
         verify(webCrawler).crawlWebsiteLinks();
         verify(webCrawler).recursivelyCrawlLinkedWebsites();
+    }
+
+    @Test
+    void testDetectSourceLanguage() {
+        crawledHeadlines = addElements();
+        webCrawler.setCrawledHeadlines(crawledHeadlines);
+        mockTranslator();
+
+        webCrawler.detectSourceLanguage();
+
+        assertEquals("de",webCrawler.getSourceLanguage());
     }
 
     @Test
@@ -249,7 +260,7 @@ class WebsiteCrawlerTest {
     @Test
     void testPrintCrawledHeadlinesZeroDepth() {
         String expectedPrintMessage = "# Überschrift h1\n\n";
-        mockHeadingTranslation();
+        mockTranslator();
 
         crawledHeadlines = addElements();
         webCrawler.setCrawledHeadlines(crawledHeadlines);
@@ -262,7 +273,7 @@ class WebsiteCrawlerTest {
     @Test
     void testPrintCrawledHeadlinesOneDepth() {
         String expectedPrintMessage = "# --> Überschrift h1\n\n";
-        mockHeadingTranslation();
+        mockTranslator();
 
         crawledHeadlines = addElements();
         webCrawler.setCrawledHeadlines(crawledHeadlines);
@@ -273,9 +284,10 @@ class WebsiteCrawlerTest {
         assertEquals(expectedPrintMessage, webCrawler.getOutput());
     }
 
-    void mockHeadingTranslation() {
+    void mockTranslator() {
         webCrawler.setTranslator(translator);
         doReturn("Überschrift h1").when(translator).translate("Heading h1");
+        doReturn("de").when(translator).detectLanguage("Heading h1");
     }
 
     void mockGetSourceLanguage() {

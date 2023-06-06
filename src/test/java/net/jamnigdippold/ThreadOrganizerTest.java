@@ -93,7 +93,7 @@ class ThreadOrganizerTest {
     }
 
     @Test
-    void testSaveOutputToFileException() {
+    void testSaveOutputToFileException() throws IOException {
         mockedConstruction = mockConstruction(FileWriter.class, (mock, context) -> {
             doThrow(new IOException("java.io.FileNotFoundException in line 100")).when(mock).write(anyString());
         });
@@ -101,5 +101,6 @@ class ThreadOrganizerTest {
         threadOrganizer.saveOutputToFile();
 
         assertEquals("Error while closing file writer: java.io.IOException: java.io.FileNotFoundException in line 100", logger.getErrorLog().get(0));
+        verify(mockedConstruction.constructed().get(0)).close();
     }
 }

@@ -114,7 +114,7 @@ public class TextTranslator implements Translator {
         }
     }
 
-    private boolean checkNodeSuccessStatus(JsonNode node) {
+    protected boolean checkNodeSuccessStatus(JsonNode node) {
         try {
             if (node.get("status") == null) {
                 logger.logError("Error while checking the success status of node: API-Response:" + node);
@@ -147,7 +147,7 @@ public class TextTranslator implements Translator {
         }
     }
 
-    private JsonNode createNode(Response apiResponse) throws IOException {
+    protected JsonNode createNode(Response apiResponse) throws IOException {
         String apiResponseBody;
 
         apiResponseBody = apiResponse.body().string();

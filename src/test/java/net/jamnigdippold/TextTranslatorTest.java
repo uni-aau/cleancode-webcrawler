@@ -1,9 +1,11 @@
 package net.jamnigdippold;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import okhttp3.*;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -11,8 +13,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -40,6 +41,59 @@ class TextTranslatorTest {
     @AfterEach
     public void teardown() {
         logger.clearLog();
+    }
+
+    @Test
+    void testDetectLanguage() {
+        doReturn("de").when(translator).getLanguageCodeFromHeadline("Überschrift h1");
+
+        String detectedCode = translator.detectLanguage("Überschrift h1");
+
+        Assertions.assertEquals("de", detectedCode);
+        verify(translator).detectLanguage(any());
+    }
+
+    @Test
+    void testCheckNoteSuccessStatus() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"success\"}";
+        mockResponseExtraction(expectedResponseOutput);
+        JsonNode node = translator.createNode(mockedResponse);
+
+        boolean result = translator.checkNodeSuccessStatus(node);
+
+        assertTrue(result);
+    }   @Test
+    void testCheckNoteSuccessStatusNoSuccess() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"error\"}";
+        mockResponseExtraction(expectedResponseOutput);
+        JsonNode node = translator.createNode(mockedResponse);
+
+        boolean result = translator.checkNodeSuccessStatus(node);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testCheckNoteSuccessStatusNoStatusField() throws IOException {
+        String expectedResponseOutput = "{\n\"error\": \"No Status Field here\"}";
+        mockResponseExtraction(expectedResponseOutput);
+        JsonNode node = translator.createNode(mockedResponse);
+
+        boolean result = translator.checkNodeSuccessStatus(node);
+
+        assertFalse(result);
+        assertEquals("Error while checking the success status of node: API-Response:{\"error\":\"No Status Field here\"}", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testCheckNoteSuccessStatusException() {
+        JsonNode node = mock(JsonNode.class);
+        doThrow(new NullPointerException()).when(node).get(any());
+
+        boolean result = translator.checkNodeSuccessStatus(node);
+
+        assertFalse(result);
+        assertEquals("Error while checking the success status of node: java.lang.NullPointerException", logger.getErrorLog().get(0));
     }
 
     @Test
@@ -109,9 +163,10 @@ class TextTranslatorTest {
         when(mockedClient.executeRequest(any())).thenThrow(new IOException("Unspecified Exception"));
 
         translator.setClient(mockedClient);
-        translator.executeTranslationApiRequest(mockedRequest);
+        Response response = translator.executeTranslationApiRequest(mockedRequest);
 
         assertEquals("Error while executing translation request: java.io.IOException: Unspecified Exception", logger.getErrorLog().get(0));
+        assertEquals(444, response.code());
     }
 
     @Test
@@ -131,9 +186,21 @@ class TextTranslatorTest {
         mockResponseExtraction(expectedResponseOutput);
         doThrow(new IOException("Unspecified Exception")).when(mockedResponseBody).string();
 
-        translator.extractTranslatedText(mockedResponse, "Headline 1");
+        String output = translator.extractTranslatedText(mockedResponse, "Headline 1");
 
+        assertEquals("Headline 1", output);
         assertEquals("Error while trying to extract translated text: java.io.IOException: Unspecified Exception", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testTranslatedTextExtractionNullError() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"notRealDataField\": {\n\"translatedText\": \"Ueberschrift h1\"\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+
+        String output = translator.extractTranslatedText(mockedResponse, "Headline 1");
+
+        assertEquals("Headline 1", output);
+        assertEquals("Error while trying to extract translated text, the Json format is incorrect: java.lang.NullPointerException", logger.getErrorLog().get(0));
     }
 
     @Test
@@ -163,9 +230,31 @@ class TextTranslatorTest {
         mockResponseExtraction(expectedResponseOutput);
         doThrow(new IOException("Unspecified Exception")).when(mockedResponseBody).string();
 
-        translator.extractLanguageCode(mockedResponse);
+        String extractedCode = translator.extractLanguageCode(mockedResponse);
 
+        assertEquals("auto", extractedCode);
         assertEquals("Error while trying to extract language code: java.io.IOException: Unspecified Exception", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testLanguageCodeExtractionNullError() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"success\",\n\"notARealDataField\": {\n\"translatedText\": \"Ueberschrift h1\",\n\"detectedSourceLanguage\": {\n\"code\": \"en\",\n\"name\": \"English\"\n}\n}\n}";
+        mockResponseExtraction(expectedResponseOutput);
+
+        String extractedCode = translator.extractLanguageCode(mockedResponse);
+
+        assertEquals("auto", extractedCode);
+        assertEquals("Error while trying to extract language code, the Json format is incorrect: java.lang.NullPointerException", logger.getErrorLog().get(0));
+    }
+
+    @Test
+    void testLanguageCodeExtractionNoSuccess() throws IOException {
+        String expectedResponseOutput = "{\n\"status\": \"failure\"\n}";
+        mockResponseExtraction(expectedResponseOutput);
+
+        String extractedCode = translator.extractLanguageCode(mockedResponse);
+
+        assertEquals("auto", extractedCode);
     }
 
     @Test
@@ -219,6 +308,7 @@ class TextTranslatorTest {
         String actualKey = translator.getApiKey();
 
         assertEquals(expectedKey, actualKey);
+        assertEquals("No API-Key found in System environment!", logger.getErrorLog().get(0));
     }
 
     @Test

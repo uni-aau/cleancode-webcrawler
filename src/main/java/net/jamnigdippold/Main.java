@@ -19,28 +19,9 @@ public class Main {
 
     public static void main(String[] args) {
         getUserInput();
-        // fakeUserInput();
         createThreadOrganizer();
         threadOrganizer.startConcurrentCrawling();
         System.exit(0);
-    }
-
-    public static void fakeUserInput() {
-        websiteUrls = new String[]{
-                "http://david.jamnig.net/cctest/threads/thread1",
-                "http://david.jamnig.net/cctest/threads/thread1",
-                "http://david.jamnig.net/cctest/threads/thread1",
-                "http://david.jamnig.net/cctest/threads/thread1",
-                "http://david.jamnig.net/cctest/threads/thread1",
-                "http://david.jamnig.net/cctest/threads/thread2"};
-        languageCodes = new String[]{"de", "de",
-                "de",
-                "de",
-                "de",
-                "de",
-                "de"};
-        depthsOfRecursiveSearch = new int[]{3, 3, 3, 3, 3};
-        outputPath = "E:\\TestOutput.md";
     }
 
     public static void createThreadOrganizer() {
