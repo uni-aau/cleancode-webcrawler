@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class ErrorLogger implements Logger {
     private static ErrorLogger logInstance;
-    private ArrayList<String> loggedErrors = new ArrayList<>();
+    private final ArrayList<String> loggedErrors = new ArrayList<>();
 
     private ErrorLogger() {
     }
