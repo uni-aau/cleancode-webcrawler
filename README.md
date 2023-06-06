@@ -1,4 +1,5 @@
 # CleanCode Webcrawler
+## Assignment 2
 
 WebCrawler, welcher von Webseiten Headlines sowie alle Links ausliest. Diese Links können bei Bedarf ebenso ausgelesen
 werden.
@@ -8,6 +9,8 @@ Tiefe visuell dargestellt
 ## Features
 
 - Argumente werden über Konsole übergeben
+- Links werden parallel gecrawled
+- Errors werden im Markdown-File ausgegeben. Crawler stürzt nicht mehr ab
 - Headlines werden gecrawled und in eine beliebige Sprache übersetzt
 - Links der gecrawlten Webseiten werden ausgelesen
 - Relative Links werden korrekt erkannt und ausgelesen
