@@ -127,7 +127,9 @@ public class WebsiteCrawler extends Thread {
     }
 
     protected void detectSourceLanguage() {
-        sourceLanguage = translator.detectLanguage(crawledHeadlines.get(0).text());
+        if(!crawledHeadlines.isEmpty()) {
+            sourceLanguage = translator.detectLanguage(crawledHeadlines.get(0).text());
+        }
     }
 
     protected void outputCrawledHeadlines() {
