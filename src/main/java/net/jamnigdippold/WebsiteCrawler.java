@@ -114,7 +114,7 @@ public class WebsiteCrawler extends Thread {
 
     protected String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
         String absoluteUrl = relativeUrl;
-        if (!relativeUrl.startsWith("http"))
+        if (!relativeUrl.startsWith("http") && !relativeUrl.isEmpty())
             absoluteUrl = websiteUrl + relativeUrl.substring(1);
 
         return absoluteUrl;
