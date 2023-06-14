@@ -11,6 +11,7 @@ import java.util.List;
 
 public class WebsiteCrawler extends Thread {
     private static final Logger logger = ErrorLogger.getInstance();
+    private static final UrlValidator validator = new JsoupWrapper();
     private String websiteUrl;
     private int maxDepthOfRecursiveSearch;
     private int currentDepthOfRecursiveSearch;
@@ -50,7 +51,7 @@ public class WebsiteCrawler extends Thread {
 
     @Override
     public void run() {
-        if (!isBrokenLink(websiteUrl)) {
+        if (!validator.isBrokenLink(websiteUrl)) {
             if (currentDepthOfRecursiveSearch > maxDepthOfRecursiveSearch)
                 outputCrawledLink(websiteUrl, false);
             else
