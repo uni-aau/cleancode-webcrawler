@@ -210,4 +210,9 @@ public class Main {
         if (!outputPath.endsWith(".md"))
             outputPath += ".md";
     }
+
+    /*
+    * No proper extraction when having ./index.html and calling new dynamic website
+    * Extract "main" functionality to separate class
+     */
 }
