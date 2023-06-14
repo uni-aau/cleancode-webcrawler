@@ -1,6 +1,5 @@
 package net.jamnigdippold;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -11,6 +10,7 @@ import java.util.List;
 
 public class WebsiteCrawler extends Thread {
     private static final Logger logger = ErrorLogger.getInstance();
+    private static final DocumentFetcher validator = new JsoupWrapper();
     private String websiteUrl;
     private int maxDepthOfRecursiveSearch;
     private int currentDepthOfRecursiveSearch;
@@ -32,7 +32,7 @@ public class WebsiteCrawler extends Thread {
 
     protected static boolean isBrokenLink(String crawledLink) {
         try {
-            Jsoup.connect(crawledLink).get();
+            validator.getConnection(crawledLink);
             return false;
         } catch (IOException | IllegalArgumentException exception) {
             return true;
@@ -50,7 +50,7 @@ public class WebsiteCrawler extends Thread {
 
     @Override
     public void run() {
-        if (!isBrokenLink(websiteUrl)) {
+        if (!WebsiteCrawler.isBrokenLink(websiteUrl)) {
             if (currentDepthOfRecursiveSearch > maxDepthOfRecursiveSearch)
                 outputCrawledLink(websiteUrl, false);
             else
@@ -84,7 +84,7 @@ public class WebsiteCrawler extends Thread {
 
     protected void establishConnection() {
         try {
-            websiteDocumentConnection = Jsoup.connect(websiteUrl).get();
+            websiteDocumentConnection = validator.getConnection(websiteUrl);
         } catch (IOException e) {
             logger.logError("Error whilst connecting to websiteUrl " + websiteUrl + ": " + e);
         }
@@ -114,7 +114,7 @@ public class WebsiteCrawler extends Thread {
 
     protected String convertRelativeUrlToAbsoluteURL(String relativeUrl) {
         String absoluteUrl = relativeUrl;
-        if (!relativeUrl.startsWith("http"))
+        if (!relativeUrl.startsWith("http") && !relativeUrl.isEmpty())
             absoluteUrl = websiteUrl + relativeUrl.substring(1);
 
         return absoluteUrl;
@@ -126,7 +126,9 @@ public class WebsiteCrawler extends Thread {
     }
 
     protected void detectSourceLanguage() {
-        sourceLanguage = translator.detectLanguage(crawledHeadlines.get(0).text());
+        if(!crawledHeadlines.isEmpty()) {
+            sourceLanguage = translator.detectLanguage(crawledHeadlines.get(0).text());
+        }
     }
 
     protected void outputCrawledHeadlines() {

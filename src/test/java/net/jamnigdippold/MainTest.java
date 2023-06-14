@@ -22,6 +22,7 @@ class MainTest {
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private final PrintStream defaultOut = System.out;
     private final PrintStream defaultErr = System.err;
+    private final DocumentFetcher validator = new JsoupWrapper();
 
     private MockedStatic<WebsiteCrawler> mockedCrawler;
     private MockedStatic<Main> mockedMain;
