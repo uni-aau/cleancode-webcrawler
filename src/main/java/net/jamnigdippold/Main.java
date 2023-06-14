@@ -5,6 +5,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.util.*;
 
 public class Main {
+    private static final UrlValidator validator = new JsoupWrapper();
     public static int urlInputAmount;
     public static String[] websiteUrls;
     public static int depthOfRecursiveSearch;
@@ -86,10 +87,10 @@ public class Main {
         String url;
         do {
             url = inputScanner.nextLine();
-            if (WebsiteCrawler.isBrokenLink(url)) {
+            if (validator.isBrokenLink(url)) {
                 System.err.println("ERROR: Cannot connect to URL, please enter a valid URL");
             }
-        } while (WebsiteCrawler.isBrokenLink(url));
+        } while (validator.isBrokenLink(url));
         return url;
     }
 
