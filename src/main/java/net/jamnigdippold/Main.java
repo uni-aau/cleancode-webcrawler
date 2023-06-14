@@ -5,7 +5,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.util.*;
 
 public class Main {
-    private static final UrlValidator validator = new JsoupWrapper();
+    private static final DocumentFetcher validator = new JsoupWrapper();
     public static int urlInputAmount;
     public static String[] websiteUrls;
     public static int depthOfRecursiveSearch;
@@ -87,10 +87,10 @@ public class Main {
         String url;
         do {
             url = inputScanner.nextLine();
-            if (validator.isBrokenLink(url)) {
+            if (WebsiteCrawler.isBrokenLink(url)) {
                 System.err.println("ERROR: Cannot connect to URL, please enter a valid URL");
             }
-        } while (validator.isBrokenLink(url));
+        } while (WebsiteCrawler.isBrokenLink(url));
         return url;
     }
 

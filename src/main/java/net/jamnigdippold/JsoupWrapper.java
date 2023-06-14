@@ -1,17 +1,13 @@
 package net.jamnigdippold;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 
-public class JsoupWrapper implements UrlValidator {
+public class JsoupWrapper implements DocumentFetcher {
     @Override
-    public boolean isBrokenLink(String crawledLink) {
-        try {
-            Jsoup.connect(crawledLink).get();
-            return false;
-        } catch (IOException | IllegalArgumentException exception) {
-            return true;
-        }
+    public Document getConnection(String crawledLink) throws IOException {
+        return Jsoup.connect(crawledLink).get();
     }
 }

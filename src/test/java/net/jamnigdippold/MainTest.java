@@ -22,7 +22,7 @@ class MainTest {
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private final PrintStream defaultOut = System.out;
     private final PrintStream defaultErr = System.err;
-    private static final UrlValidator validator = new JsoupWrapper();
+    private final DocumentFetcher validator = new JsoupWrapper();
 
     private MockedStatic<WebsiteCrawler> mockedCrawler;
     private MockedStatic<Main> mockedMain;
@@ -342,7 +342,7 @@ class MainTest {
         assertEquals("Enter the website URL that should be crawled 1/1" + System.getProperty("line.separator"), outContent.toString());
         assertEquals("", errContent.toString());
         assertArrayEquals(new String[]{"https://example.com"}, Main.websiteUrls);
-        mockedCrawler.verify(() -> validator.isBrokenLink("https://example.com"), times(2));
+        mockedCrawler.verify(() -> WebsiteCrawler.isBrokenLink("https://example.com"), times(2));
     }
 
     @Test
@@ -385,9 +385,9 @@ class MainTest {
 
     private void mockIsBrokenLink() {
         mockedCrawler = mockStatic(WebsiteCrawler.class);
-        mockedCrawler.when(() -> validator.isBrokenLink(anyString())).thenReturn(true);
-        mockedCrawler.when(() -> validator.isBrokenLink("https://example.com")).thenReturn(false);
-        mockedCrawler.when(() -> validator.isBrokenLink("wrong URL format")).thenReturn(true);
-        mockedCrawler.when(() -> validator.isBrokenLink("https://www.notARealWebsite.com")).thenReturn(true);
+        mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink(anyString())).thenReturn(true);
+        mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink("https://example.com")).thenReturn(false);
+        mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink("wrong URL format")).thenReturn(true);
+        mockedCrawler.when(() -> WebsiteCrawler.isBrokenLink("https://www.notARealWebsite.com")).thenReturn(true);
     }
 }
